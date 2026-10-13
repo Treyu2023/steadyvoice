@@ -1,17 +1,22 @@
-# SteadyVoice
+## Turn the phone link on (one time)
 
-A calm communication app for someone who cannot speak right now. Tap a phrase and the phone says it. The phrases she uses most rise to the top. Anything can be saved as a big button on the board.
+The app is in this repo. GitHub has to publish it before her phone can open it.
 
-Nothing is uploaded. Phrases, history, and voice clips stay on the phone.
+1. Open [Pages settings](https://github.com/Treyu2023/steadyvoice/settings/pages).
+2. Build and deployment: **Deploy from a branch**.
+3. Branch **main**, folder **/ (root)**. Save.
+4. Wait about a minute, then send her:
+
+https://treyu2023.github.io/steadyvoice/
 
 ## Install on Android
 
-1. Open this link in **Chrome**: https://treyu2023.github.io/steadyvoice/
+1. Open that link in **Chrome** (not Facebook or Instagram).
 2. Tap the three-dot menu.
 3. Tap **Install app** or **Add to Home screen**.
 4. Open **SteadyVoice** from the home screen.
 
-After it is installed it works offline. Use Chrome, not the Facebook or Instagram browser.
+After it is installed it works offline.
 
 ## First things to try
 
@@ -22,4 +27,4 @@ After it is installed it works offline. Use Chrome, not the Facebook or Instagra
 
 Stronger side puts Yes toward the hand that is easier. Clear voice speed is a good start. Lock editing once the board is set so buttons are not changed by accident.
 
-A backup file from More → Backup can move her phrases to another phone.
+A backup file from More, then Backup, can move her phrases to another phone. Nothing is uploaded. Phrases, history, and voice clips stay on the phone.
