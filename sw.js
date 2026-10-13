@@ -1,7 +1,8 @@
-const CACHE = "steadyvoice-1";
+const CACHE = "steadyvoice-2";
 const ASSETS = [
   "./",
   "./index.html",
+  "./SteadyVoice.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",

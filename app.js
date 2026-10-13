@@ -124,7 +124,11 @@ let rec = null;
 let noticeTimer = 0;
 
 function save() {
-  localStorage.setItem(KEY, JSON.stringify({ phrases: state.phrases, history: state.history, settings: state.settings }));
+  try {
+    localStorage.setItem(KEY, JSON.stringify({ phrases: state.phrases, history: state.history, settings: state.settings }));
+  } catch {
+    /* file:// and some phone browsers block storage; the board still works */
+  }
 }
 function buzz() {
   if (state.settings.haptics && navigator.vibrate) navigator.vibrate(12);
@@ -1037,7 +1041,8 @@ file.addEventListener("change", async () => {
 });
 document.body.appendChild(file);
 
-if ("serviceWorker" in navigator) {
+const pageProtocol = location.protocol;
+if ((pageProtocol === "https:" || pageProtocol === "http:") && "serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => undefined);
 }
 

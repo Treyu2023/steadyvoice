@@ -1,22 +1,23 @@
-## Turn the phone link on (one time)
+## Open it on an Android phone (no website)
 
-The app is in this repo. GitHub has to publish it before her phone can open it.
+Chrome on a phone will not load a separate script next to an HTML file. That is why the old page was white.
 
-1. Open [Pages settings](https://github.com/Treyu2023/steadyvoice/settings/pages).
-2. Build and deployment: **Deploy from a branch**.
-3. Branch **main**, folder **/ (root)**. Save.
-4. Wait about a minute, then send her:
+Send **SteadyVoice.html** only. It is the whole app in one file.
 
-https://treyu2023.github.io/steadyvoice/
+1. Copy `SteadyVoice.html` onto the phone (Drive, email, or a cable). Put it in **Download**.
+2. Open the Download folder, tap the file, and choose **Chrome**.
+3. The board should show immediately. Tap a button and the phone speaks.
 
-## Install on Android
+`index.html` is the same single file, if that is the name already on the phone. Replace the old copy. Do not open it from inside a zip.
 
-1. Open that link in **Chrome** (not Facebook or Instagram).
+Phrases are saved in that browser. If they disappear after a reinstall, use More, then Backup, and keep the file.
+
+## Home screen (optional, needs the site)
+
+1. Open https://treyu2023.github.io/steadyvoice/ in **Chrome** (not Facebook or Instagram).
 2. Tap the three-dot menu.
 3. Tap **Install app** or **Add to Home screen**.
-4. Open **SteadyVoice** from the home screen.
-
-After it is installed it works offline.
+4. Open **SteadyVoice** from the home screen. After that it works offline.
 
 ## First things to try
 
