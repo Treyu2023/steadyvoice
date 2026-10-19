@@ -50,6 +50,8 @@
   footer .wrap { max-width: 32rem; margin: 0 auto; display: grid; gap: .4rem; }
   .hide { display: none; }
   ol { margin: .4rem 0 0; padding-left: 1.1rem; }
+  html[data-theme="night"] { --paper:#141311; --ink:#f4efe8; --card:#241f1b; --line:#3c342c; --muted:#b7ab9e; --teal:#3dbaad; --soft:#1a3330; --rose:#e08a82; --rose-soft:#3a2422; --on:#06221f; }
+  .tools { display:flex; flex-wrap:wrap; gap:.4rem; margin:.4rem 0 .6rem; }
 </style>
 </head>
 <body>
@@ -125,10 +127,10 @@ const MALE = /\bmale\b|\bdavid\b|\bdaniel\b|\balex\b|\bfred\b|\bguy\b|\bgeorge\b
 const KEY = "steadyvoice.call.v2";
 const $= (s,r=document) => r.querySelector(s);
 const view = $("#view");
-let tab = "board", group = "All", query = "", draft = "", speaking = "", notice = "";
+let tab = "board", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false;
 let state = load();
 function load(){
-  const blank = {custom:[], uses:{}, history:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:""}};
+  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true}};
   try { return Object.assign(blank, JSON.parse(localStorage.getItem(KEY)||"null")||{}, {settings:Object.assign(blank.settings,(JSON.parse(localStorage.getItem(KEY)||"{}").settings)||{})}); }
   catch { return blank; }
 }
@@ -156,6 +158,9 @@ function say(text){
   if (!clean || !window.speechSynthesis){ notice = "Open this file in Chrome so the phone can speak."; render(); return; }
   if (navigator.vibrate) navigator.vibrate(12);
   state.history = [clean].concat((state.history||[]).filter(x => x !== clean)).slice(0,12);
+  const hit = phrases().find(p => p.speak === clean);
+  state.uses = state.uses || {};
+  if (hit) state.uses[hit.id] = (state.uses[hit.id] || 0) + 1;
   save();
   speechSynthesis.cancel();
   const p = preset();
@@ -178,6 +183,9 @@ function say(text){
 function textIt(text){ location.href = "sms:?&body=" + encodeURIComponent(text); }
 function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
 function render(){
+  document.documentElement.dataset.theme = (state.settings.theme === "night") ? "night" : "paper";
+  const dock = document.querySelector("footer .dock");
+  if (dock) dock.style.display = state.settings.showDock === false ? "none" : "";
   $("#title").textContent = tab === "call" ? "On a call" : tab === "say" ? "Type it" : tab === "more" ? "More" : "Say it";
   $("#call-toggle").className = "callbtn" + (state.settings.callMode ? " on" : "");
   $("#call-toggle").textContent = state.settings.callMode ? "Call mode on" : "Call mode";
@@ -188,13 +196,56 @@ function render(){
   else if (tab === "call") view.innerHTML = banner + call();
   else view.innerHTML = banner + more();
 }
+function shown(){
+  const hidden = new Set(state.hidden || []);
+  const list = phrases().filter(p => !hidden.has(p.id) && (group === "All" || p.group === group) && (!query || (p.label+" "+p.speak).toLowerCase().includes(query.toLowerCase())));
+  const uses = state.uses || {};
+  const order = state.order || [];
+  const rank = new Map(order.map((id, i) => [id, i]));
+  const mode = state.settings.sort || "used";
+  return list.sort((a, b) => {
+    if (mode === "az") return a.label.localeCompare(b.label);
+    if (mode === "group") return a.group.localeCompare(b.group) || a.label.localeCompare(b.label);
+    if (mode === "manual") return (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999);
+    return (uses[b.id] || 0) - (uses[a.id] || 0);
+  });
+}
+function move(id, dir){
+  const list = shown().map(p => p.id);
+  const i = list.indexOf(id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  const hold = list[i]; list[i] = list[j]; list[j] = hold;
+  const full = (state.order || []).concat(phrases().map(p => p.id));
+  const seen = new Set();
+  const base = full.filter(x => seen.has(x) ? false : (seen.add(x), true));
+  let cursor = 0;
+  state.order = base.map(item => list.includes(item) ? list[cursor++] : item);
+  state.settings.sort = "manual";
+  save();
+  render();
+}
 function board(){
   const groups = ["All","Urgent","Needs","Feelings","Talk","People","Care"];
-  const list = phrases().filter(p => (group === "All" || p.group === group) && (!query || (p.label+" "+p.speak).toLowerCase().includes(query.toLowerCase())));
-  return `<p class="muted">Tap a button. The phone says the full sentence.</p>
-    <input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">
-    <div class="chips">${groups.map(g => `<button class="chip${g===group?" on":""}" data-group="${g}" type="button">${g}</button>`).join("")}</div>
-    <div class="grid">${list.map(p => `<button class="pad ${p.tone}" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b><span>${esc(p.group)}</span></button>`).join("")}</div>`;
+  const list = shown();
+  const sorts = [["used","Most used"],["az","A–Z"],["group","Group"],["manual","My order"]];
+  const tools = arranging ? `<div class="card"><p>Arrange is on. These buttons will not speak.</p>
+    <button class="wide teal" id="done" type="button">Done</button>
+    <div class="tools">${sorts.map(([id,label]) => `<button class="chip${state.settings.sort===id?" on":""}" data-sort="${id}" type="button">${label}</button>`).join("")}</div>
+    <div class="tools">
+      <button class="chip" id="theme" type="button">${state.settings.theme==="night"?"Dark on":"Dark off"}</button>
+      <button class="chip" id="cols" type="button">${state.settings.columns||2} columns</button>
+      <button class="chip" id="chips" type="button">${state.settings.showChips===false?"Groups off":"Groups on"}</button>
+      <button class="chip" id="dock" type="button">${state.settings.showDock===false?"Yes/No bar off":"Yes/No bar on"}</button>
+    </div></div>` : `<p class="muted">Tap a button. The phone says the full sentence.</p>`;
+  const chips = state.settings.showChips === false ? "" : `<div class="chips">${groups.map(g => `<button class="chip${g===group?" on":""}" data-group="${g}" type="button">${g}</button>`).join("")}</div>`;
+  const cols = state.settings.columns === 1 ? "1fr" : state.settings.columns === 3 ? "1fr 1fr 1fr" : "1fr 1fr";
+  const cards = list.map((p, index) => arranging
+    ? `<div class="pad ${p.tone}"><b>${esc(p.label)}</b><div class="tools"><button class="chip" data-move="${esc(p.id)}" data-dir="-1" type="button" ${index===0?"disabled":""}>Up</button><button class="chip" data-move="${esc(p.id)}" data-dir="1" type="button" ${index===list.length-1?"disabled":""}>Down</button><button class="chip" data-hide="${esc(p.id)}" type="button">Hide</button></div></div>`
+    : `<button class="pad ${p.tone}" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b><span>${esc(p.group)}</span></button>`).join("");
+  const hidden = (state.hidden||[]).map(id => phrases().find(p => p.id === id)).filter(Boolean);
+  const back = arranging && hidden.length ? `<p class="kicker">Hidden</p>` + hidden.map(p => `<button class="wide ghost" data-show="${esc(p.id)}" type="button">Put back: ${esc(p.label)}</button>`).join("") : "";
+  return `${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}`;
 }
 function typer(){
   return `<label for="box">What should the phone say?</label>
@@ -222,11 +273,22 @@ function more(){
     <div class="card"><b>Text a phrase</b><p>Text opens the phone's own Messages app with the words filled in. She taps Send. WhatsApp does the same if it is installed. A new messaging app is not required.</p>
     <button class="wide ink" data-speak="" data-text="I had a stroke. I can hear you. I cannot speak. Please read this text." type="button">Text: I cannot speak</button></div>
     <div class="card"><b>Put it on the phone</b><p>An iPhone cannot install a random downloaded app. The simple way is Add to Home Screen from Chrome or Safari. Or send this one file, save it in Downloads, and open it with Chrome. Do not open it from inside a zip.</p></div>
-    <p class="muted">Nothing is uploaded. Phrases stay on this phone.</p>`;
+    <button class="wide ink" id="unlock" type="button">Arrange the board</button>
+    <p class="muted">Arrange is locked until you tap that. Done locks it again. Nothing is uploaded.</p>`;
 }
 view.addEventListener("click", (event) => {
   const t = event.target.closest("button");
   if (!t) return;
+  if (t.id === "unlock"){ arranging = true; tab = "board"; render(); return; }
+  if (t.id === "done"){ arranging = false; render(); return; }
+  if (t.id === "theme"){ state.settings.theme = state.settings.theme === "night" ? "paper" : "night"; save(); render(); return; }
+  if (t.id === "cols"){ state.settings.columns = state.settings.columns === 1 ? 2 : state.settings.columns === 2 ? 3 : 1; save(); render(); return; }
+  if (t.id === "chips"){ state.settings.showChips = state.settings.showChips === false; save(); render(); return; }
+  if (t.id === "dock"){ state.settings.showDock = state.settings.showDock === false; save(); render(); return; }
+  if (t.dataset.sort){ state.settings.sort = t.dataset.sort; save(); render(); return; }
+  if (t.dataset.move){ move(t.dataset.move, Number(t.dataset.dir)); return; }
+  if (t.dataset.hide){ state.hidden = (state.hidden||[]).concat(t.dataset.hide); save(); render(); return; }
+  if (t.dataset.show){ state.hidden = (state.hidden||[]).filter(id => id !== t.dataset.show); save(); render(); return; }
   if (t.dataset.group){ group = t.dataset.group; render(); return; }
   if (t.dataset.speak !== undefined && t.dataset.speak){ say(t.dataset.speak); return; }
   if (t.dataset.text){ textIt(t.dataset.text); return; }
