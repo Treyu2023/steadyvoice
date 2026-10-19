@@ -307,7 +307,7 @@ function render(){
 }
 function shown(){
   const hidden = new Set(state.hidden || []);
-  const list = phrases().filter(p => !hidden.has(p.id) && (group === "All" || p.group === group) && (!query || (p.label+" "+p.speak).toLowerCase().includes(query.toLowerCase())));
+  const list = phrases().filter(p => !hidden.has(p.id) && p.id !== "emergency" && p.id !== "911" && (group === "All" || p.group === group) && (!query || (p.label+" "+p.speak).toLowerCase().includes(query.toLowerCase())));
   const uses = state.uses || {};
   const order = state.order || [];
   const rank = new Map(order.map((id, i) => [id, i]));
@@ -356,7 +356,9 @@ function board(){
   const back = arranging && hidden.length ? `<p class="kicker">Hidden</p>` + hidden.map(p => `<button class="wide ghost" data-show="${esc(p.id)}" type="button">Put back: ${esc(p.label)}</button>`).join("") : "";
   const note = !arranging && state.settings.comedyId ? `<button class="wide" id="reset-voice" type="button" style="margin-bottom:.5rem">Playing ${esc((COMEDY.find(item => item.id === state.settings.comedyId)||{}).name || "a play voice")}. Tap for her normal voice.</button>` : "";
   const boardOpts = arranging ? "" : fold("board", "Board options", `<p class="muted">To move, hide, or restyle buttons, open More and then Arrange.</p>`);
-  return `${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${boardOpts}`;
+  const tucked = phrases().filter(p => (p.id === "emergency" || p.id === "911") && !(state.hidden||[]).includes(p.id));
+  const emergency = tucked.length ? fold("emergency", "Emergency", `<p class="muted">Tucked here so a tap on the board cannot start them.</p><div class="grid" style="margin-top:.4rem">${tucked.map(p => `<button class="pad urgent" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>`) : "";
+  return `${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${emergency}${boardOpts}`;
 }
 function typer(){
   const mood = Number(state.settings.mood);
@@ -378,7 +380,7 @@ function call(){
   return `<div class="card"><h2 style="margin:.1rem 0 .4rem">So the other person can hear her</h2>
     <p>Tap Phone call at the top. On the call screen, tap Speaker, turn the volume up, and hold the phone a little away. She is heard through the microphone.</p></div>
     <button class="wide teal" data-speak="Can you hear me? I am using SteadyVoice because I cannot speak." type="button">Test: Can you hear me?</button>
-    <div class="grid" style="margin-top:.7rem">${phrases().slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>
+    <div class="grid" style="margin-top:.7rem">${phrases().filter(p => p.id !== "emergency" && p.id !== "911").slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>
     ${fold("call", "Call options", `<button class="wide ghost" id="lead" type="button">${state.settings.leadIn ? "Starts with Please listen" : "Phrase only"}</button><div class="voices" style="margin-top:.5rem">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b></button>`).join("")}</div>`)}`;
 }
 let openTalk = "";
