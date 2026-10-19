@@ -28,6 +28,8 @@ Phone call
   Turn the volume up.
   Hold the phone a little away.
   The other person hears her through the microphone.
+  Then come back to SteadyVoice and stay there.
+  Do not leave the Phone app in front of it, or the voice will stop.
 
 Conversations
   What she says is kept on the phone, in order.

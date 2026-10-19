@@ -10,7 +10,7 @@
   :root { color-scheme: light; --paper:#f3eee6; --ink:#1c1916; --card:#fffdf9; --line:#e4d9cc; --muted:#6d645b; --teal:#0e6b62; --soft:#e5f3f1; --rose:#8e2f2f; --rose-soft:#f8e8e4; --on:#f3fffc; }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Segoe UI", "Helvetica Neue", sans-serif; }
-  body { max-width: 32rem; margin: 0 auto; min-height: 100dvh; padding: 1rem 1rem 8.5rem; }
+  body { max-width: 32rem; margin: 0 auto; min-height: 100dvh; padding: max(1rem, env(safe-area-inset-top)) 1rem 8.5rem; }
   button, input, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; border: 0; }
   h1 { font-size: 1.6rem; margin: 0; }
@@ -231,11 +231,30 @@ function liveCall(){
   const output = state.settings.output || "auto";
   return output === "call" || (output === "auto" && detectedCall);
 }
+let screenLock = null;
+let renewing = false;
 async function applyRoute(){
   const on = liveCall();
   state.settings.callMode = on;
   try { if (navigator.audioSession) navigator.audioSession.type = on ? "play-and-record" : "playback"; } catch {}
-  try { if (on && navigator.wakeLock) await navigator.wakeLock.request("screen"); } catch {}
+  const held = screenLock;
+  screenLock = null;
+  renewing = true;
+  try { if (held) await held.release(); } catch {}
+  renewing = false;
+  if (!on || document.visibilityState === "hidden" || !navigator.wakeLock) return;
+  try {
+    const next = await navigator.wakeLock.request("screen");
+    screenLock = next;
+    next.addEventListener("release", () => {
+      if (renewing || screenLock !== next) return;
+      screenLock = null;
+      if (liveCall() && document.visibilityState === "visible") applyRoute();
+    });
+  } catch {}
+}
+function resumeVoice(){
+  try { if (window.speechSynthesis) speechSynthesis.resume(); } catch {}
 }
 function renderSound(){
   const box = $("#sound");
@@ -305,6 +324,7 @@ function say(text){
   rememberLine(clean);
   learn(clean);
   save();
+  resumeVoice();
   speechSynthesis.cancel();
   const shaped = shape();
   const list = voices();
@@ -327,7 +347,7 @@ function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
 function render(){
   document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
   renderSound();
-  const speakingScreen = tab === "board" || tab === "say" || tab === "call";
+  const speakingScreen = tab === "board" || tab === "say" || tab === "call" || liveCall();
   const sound = $("#sound");
   if (sound) sound.style.display = speakingScreen ? "" : "none";
   const footer = document.querySelector("footer");
@@ -337,7 +357,7 @@ function render(){
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
   $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "more" ? "Voices and look" : "Say a phrase";
-  const banner = (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "");
+  const banner = (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close SteadyVoice.</p>` : "");
   const steps = [
     "Tap a phrase. This phone says it for you.",
     "Speaker is for people in the room. Phone call is for someone on the phone.",
@@ -605,6 +625,12 @@ if (navigator.audioSession && navigator.audioSession.addEventListener) {
     render();
   });
 }
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  resumeVoice();
+  applyRoute();
+});
+window.addEventListener("pageshow", () => { resumeVoice(); applyRoute(); });
 applyRoute();
 render();
 </script>
