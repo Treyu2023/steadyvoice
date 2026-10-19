@@ -1,0 +1,140 @@
+HOW TO SET UP STEADYVOICE
+
+SteadyVoice speaks when she taps a word.
+You do not need a store.
+You do not need an account.
+You do not pay.
+
+The phone is the main way.
+A Windows computer is the other way.
+
+================================
+WHAT IT DOES
+================================
+
+Home is a short list. Tap one thing.
+
+Say a phrase
+  Big buttons. The phone says the whole sentence.
+
+Type a sentence
+  For words that are not on a button.
+  After she uses the app, it offers words she has already said.
+  It does not guess from a big dictionary.
+
+Phone call
+  Tap Phone call at the top.
+  On the phone's call screen, tap Speaker.
+  Turn the volume up.
+  Hold the phone a little away.
+  The other person hears her through the microphone.
+
+Conversations
+  What she says is kept on the phone, in order.
+  She can open an old talk and say it again.
+  Save and start a new talk when the subject changes.
+
+Voices and look
+  The screen starts dark.
+  She can make it light, change the size, or pick a woman's voice.
+  Mood goes from soft to harsh.
+  Sweet, Giggle, Drama, and Grumpy are for play.
+  Arrange is locked until someone opens it, so buttons are not moved by accident.
+
+Emergency
+  Call 911 and Emergency are not on the front.
+  Open Emergency only when she means it.
+
+Show me how
+  Four short steps. She can open them again from Home.
+
+Nothing she says is uploaded.
+A backup is in Voices and look, then Install and backup.
+
+================================
+ON HER ANDROID PHONE
+================================
+
+You only need one file: SteadyVoice.html.
+The other files are for a Windows computer.
+Do not tap those on the phone.
+
+1. Send SteadyVoice.html to the phone.
+   A text or an email is fine.
+
+2. On the phone, tap the file.
+   If the phone asks how to open it, tap Chrome.
+   Do not use a different browser.
+   If Chrome is not there, install Google Chrome
+   from the Play Store. Then try again.
+
+3. If the file only downloads, open Chrome.
+   Tap the three dots at the top.
+   Tap Downloads.
+   Tap SteadyVoice.html.
+
+4. Put the icon on the home screen.
+   With the page open, tap the three dots.
+   Tap Add to Home screen.
+   If you see Install app, tap that instead.
+   Tap Add.
+   The name should say SteadyVoice.
+
+5. Leave the file in Downloads.
+   Do not move it.
+   Do not delete it.
+   The home screen icon needs that file.
+
+6. It works with no internet.
+   The app is the file on the phone.
+   After it opens once, Wi-Fi can be off.
+   If it will not speak, turn Wi-Fi on and try once.
+   Then Wi-Fi can be off again.
+
+7. Next time, tap the SteadyVoice icon.
+
+If you do not see Add to Home screen:
+Open Chrome.
+Tap the three dots.
+Tap Downloads.
+Tap SteadyVoice.html.
+It still works.
+
+Do not open the file from inside the zip.
+Take SteadyVoice.html out first.
+
+================================
+ON A WINDOWS COMPUTER
+================================
+
+1. Find SteadyVoice.zip.
+
+2. Right-click the zip.
+   Click Extract All.
+   Click Extract.
+   A folder named SteadyVoice opens.
+
+3. Use that new folder.
+   Do not start it from inside the zip window.
+
+4. Double-click Start-SteadyVoice.bat.
+   Do not double-click SteadyVoice.html.
+   Do not double-click the other Start-SteadyVoice file.
+
+5. If Windows asks "Do you want to open this file?",
+   click Open.
+
+6. A black box may flash. That is okay.
+   SteadyVoice then opens in its own window.
+   There is no address bar. That is right.
+
+7. If a box says Chrome or Edge was not found:
+   Ask someone to install Google Chrome.
+   Then double-click Start-SteadyVoice.bat again.
+
+Next time:
+Open the SteadyVoice folder.
+Double-click Start-SteadyVoice.bat again.
+
+Keep all the files in that same folder.
+If you move only one file, it will not open.

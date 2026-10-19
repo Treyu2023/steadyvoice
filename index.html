@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="night">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -62,12 +62,13 @@
 <body>
   <div class="row">
     <div>
+      <button id="home" class="ghost" type="button" style="display:none;margin-bottom:.4rem">Home</button>
       <p class="kicker">SteadyVoice</p>
-      <h1 id="title">Say it</h1>
+      <h1 id="title">Home</h1>
     </div>
   </div>
   <div id="sound"></div>
-  <nav class="tabs" aria-label="Sections">
+  <nav class="tabs" aria-label="Sections" style="display:none">
     <button class="tab on" data-tab="board" type="button">Board</button>
     <button class="tab" data-tab="say" type="button">Speak</button>
     <button class="tab" data-tab="call" type="button">Call</button>
@@ -132,7 +133,7 @@ const MALE = /\bmale\b|\bdavid\b|\bdaniel\b|\balex\b|\bfred\b|\bguy\b|\bgeorge\b
 const KEY = "steadyvoice.call.v2";
 const $= (s,r=document) => r.querySelector(s);
 const view = $("#view");
-let tab = "board", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false;
+let tab = "menu", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false, guideOn = false, guideStep = 0;
 let state = load();
 function talkStamp(at){ return new Date(at).toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
 function ensureTalks(){
@@ -190,8 +191,38 @@ function saveTalk(){
   render();
 }
 ensureTalks();
+if (!Array.isArray(state.learned)) state.learned = [];
+if (!state.settings.themeChosen){ state.settings.theme = "night"; state.settings.themeChosen = true; save(); }
+if (!state.settings.seenTutorial) guideOn = true;
+function learn(line){
+  const text = String(line || "").trim().slice(0, 180);
+  if (!text) return;
+  if (!Array.isArray(state.learned)) state.learned = [];
+  const index = state.learned.findIndex(item => item && item.text && item.text.toLowerCase() === text.toLowerCase());
+  if (index >= 0) state.learned[index].count = (state.learned[index].count || 0) + 1;
+  else state.learned.push({text: text, count: 1});
+  state.learned.sort((a, b) => (b.count || 0) - (a.count || 0));
+  state.learned = state.learned.slice(0, 80);
+}
+function suggestions(text){
+  const queryText = String(text || "").trim().toLowerCase();
+  if (!queryText) return [];
+  const risky = /911|emergency/i.test(text || "");
+  const source = (state.learned || []).filter(item => item && item.text && (risky || !/911|emergency/i.test(item.text)));
+  const starts = source.filter(item => item.text.toLowerCase().startsWith(queryText) && item.text.toLowerCase() !== queryText);
+  if (starts.length) return starts.slice(0, 5).map(item => item.text);
+  const token = queryText.split(/\s+/).pop() || "";
+  if (token.length < 2) return [];
+  const words = new Map();
+  source.forEach(item => item.text.split(/\s+/).forEach(word => {
+    const clean = word.replace(/[^a-zA-Z']/g, "");
+    const lower = clean.toLowerCase();
+    if (clean.length >= 2 && lower.startsWith(token) && lower !== token) words.set(clean, (words.get(clean) || 0) + (item.count || 1));
+  }));
+  return Array.from(words.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(pair => pair[0]);
+}
 function load(){
-  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], talks:[], currentId:"", settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true, output:"auto", mood:50, comedyId:""}};
+  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], talks:[], currentId:"", learned:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"night", sort:"used", columns:2, showChips:true, showDock:true, output:"auto", mood:50, comedyId:"", themeChosen:false, seenTutorial:false}};
   try { return Object.assign(blank, JSON.parse(localStorage.getItem(KEY)||"null")||{}, {settings:Object.assign(blank.settings,(JSON.parse(localStorage.getItem(KEY)||"{}").settings)||{})}); }
   catch { return blank; }
 }
@@ -272,6 +303,7 @@ function say(text){
   state.uses = state.uses || {};
   if (hit) state.uses[hit.id] = (state.uses[hit.id] || 0) + 1;
   rememberLine(clean);
+  learn(clean);
   save();
   speechSynthesis.cancel();
   const shaped = shape();
@@ -293,17 +325,43 @@ function say(text){
 function textIt(text){ location.href = "sms:?&body=" + encodeURIComponent(text); }
 function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
 function render(){
-  document.documentElement.dataset.theme = (state.settings.theme === "night") ? "night" : "paper";
+  document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
   renderSound();
+  const speakingScreen = tab === "board" || tab === "say" || tab === "call";
+  const sound = $("#sound");
+  if (sound) sound.style.display = speakingScreen ? "" : "none";
+  const footer = document.querySelector("footer");
+  if (footer) footer.style.display = speakingScreen ? "" : "none";
+  const home = $("#home");
+  if (home) home.style.display = tab === "menu" ? "none" : "";
   const dock = document.querySelector("footer .dock");
-  if (dock) dock.style.display = state.settings.showDock === false ? "none" : "";
-  $("#title").textContent = tab === "call" ? "On a call" : tab === "say" ? "Speak" : tab === "more" ? "More" : "Say it";
-  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
+  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "more" ? "Voices and look" : "Say a phrase";
   const banner = (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "");
-  if (tab === "board") view.innerHTML = banner + board();
-  else if (tab === "say") view.innerHTML = banner + typer();
-  else if (tab === "call") view.innerHTML = banner + call();
-  else view.innerHTML = banner + more();
+  const steps = [
+    "Tap a phrase. This phone says it for you.",
+    "Speaker is for people in the room. Phone call is for someone on the phone.",
+    "If the words are not on a button, type them, then tap Say it. Words she has said before will be offered.",
+    "Tap Home to come back here. Tap Stop if the voice should be quiet."
+  ];
+  const guide = guideOn ? `<div class="card" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:8"><p class="kicker">Step ${guideStep + 1} of 4</p><p style="font-size:1.2rem;font-weight:650">${esc(steps[guideStep] || "")}</p><button class="wide teal" id="guide-next" type="button">${guideStep >= 3 ? "Done" : "Next"}</button><button class="wide ghost" id="guide-skip" type="button">Skip</button></div>` : "";
+  if (tab === "menu") view.innerHTML = banner + menu() + guide;
+  else if (tab === "board") view.innerHTML = banner + board() + guide;
+  else if (tab === "say") view.innerHTML = banner + typer() + guide;
+  else if (tab === "call") view.innerHTML = banner + call() + guide;
+  else view.innerHTML = banner + more() + guide;
+}
+function menu(){
+  const rows = [
+    ["board", "Say a phrase", "Tap a button. The phone says the whole sentence."],
+    ["say", "Type a sentence", "Write words that are not on a button."],
+    ["call", "Phone call", "So the person on the line can hear her."],
+    ["talks", "Conversations", "Open an earlier talk and say it again."],
+    ["more", "Voices and look", "Change the voice, the size, or the dark screen."],
+    ["guide", "Show me how", "Four short steps. You can come back anytime."]
+  ];
+  return rows.map(row => `<button class="wide" data-go="${row[0]}" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>${row[1]}</b><br><span class="muted">${row[2]}</span></button>`).join("")
+    + `<button class="wide ghost" data-go="emergency" type="button" style="display:block;width:100%;text-align:left;margin-top:1rem"><b>Emergency</b><br><span class="muted">Only if she needs help right now.</span></button>`;
 }
 function shown(){
   const hidden = new Set(state.hidden || []);
@@ -367,8 +425,10 @@ function typer(){
   const comedy = state.settings.comedyId || "";
   const chips = [{id:"", name:"Normal"}].concat(COMEDY).map(item => `<button class="chip${comedy===item.id?" on":""}" data-comedy="${item.id}" type="button">${item.name}</button>`).join("");
   const options = fold("speak", "Speak options", `<button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button><div class="chips" style="margin-top:.6rem">${["I","need","please","help","water","pain","yes","no"].map(w => `<button class="chip" data-word="${w}" type="button">${w}</button>`).join("")}</div>`);
+  const ideas = suggestions(draft).map(item => `<button class="chip" data-suggest="${esc(item)}" type="button">${esc(item)}</button>`).join("");
   return `<label for="box">What should the phone say?</label>
     <textarea id="box">${esc(draft)}</textarea>
+    ${ideas ? `<div class="chips" style="margin:.4rem 0 .6rem">${ideas}</div>` : ""}
     <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Soft</span><input id="mood" type="range" min="0" max="100" value="${moodSafe}" aria-label="Mood, from soft to harsh" style="flex:1;accent-color:#0e6b62"><span class="muted">Harsh</span></div>
     <p class="muted" id="mood-word">${word}</p>
     <p style="margin:.4rem 0 .2rem;font-weight:600">Play voices</p>
@@ -420,6 +480,35 @@ function more(){
 view.addEventListener("click", (event) => {
   const t = event.target.closest("button");
   if (!t) return;
+  if (t.dataset.go){
+    if (t.dataset.go === "guide"){ guideOn = true; guideStep = 0; render(); return; }
+    if (t.dataset.go === "talks"){ tab = "more"; openTalk = ""; render(); return; }
+    if (t.dataset.go === "emergency"){ tab = "board"; folds.emergency = true; render(); return; }
+    tab = t.dataset.go;
+    render();
+    return;
+  }
+  if (t.dataset.suggest){
+    const suggestion = t.dataset.suggest;
+    const current = draft.trim();
+    if (!current || suggestion.toLowerCase().startsWith(current.toLowerCase())) draft = suggestion;
+    else {
+      const parts = current.split(/\s+/);
+      parts[parts.length - 1] = suggestion;
+      draft = parts.join(" ") + " ";
+    }
+    render();
+    const box = $("#box");
+    if (box) box.focus();
+    return;
+  }
+  if (t.id === "guide-next"){
+    if (guideStep >= 3){ guideOn = false; state.settings.seenTutorial = true; save(); }
+    else guideStep += 1;
+    render();
+    return;
+  }
+  if (t.id === "guide-skip"){ guideOn = false; state.settings.seenTutorial = true; save(); render(); return; }
   if (t.dataset.fold){ folds[t.dataset.fold] = !folds[t.dataset.fold]; render(); return; }
   if (t.id === "replay-current"){ replayTalk(state.currentId); return; }
   if (t.id === "replay-open"){ replayTalk(openTalk); return; }
@@ -499,6 +588,7 @@ $("#sound").addEventListener("click", (event) => {
   }
 });
 $("#stop").onclick = () => { speechSynthesis.cancel(); speaking = ""; render(); };
+$("#home").onclick = () => { tab = "menu"; arranging = false; openTalk = ""; notice = ""; render(); };
 $("#again").onclick = () => { if (state.history[0]) say(state.history[0]); };
 document.body.addEventListener("click", (event) => {
   const t = event.target.closest("[data-say]");
