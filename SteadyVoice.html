@@ -344,7 +344,112 @@ function esc(s){
     return "&" + "#39;";
   });
 }
-function say(text){
+
+const LINES = {
+  "please listen.": { es: "Por favor, escucha.", it: "Per favore, ascolta.", fr: "Écoutez, s'il vous plaît.", zh: "请听。", ja: "聞いてください。" },
+  "i need help.": { es: "Necesito ayuda.", it: "Ho bisogno di aiuto.", fr: "J'ai besoin d'aide.", zh: "我需要帮助。", ja: "助けてください。" },
+  "i had a stroke. i can hear you. i cannot speak right now. please listen to this voice.": { es: "Tuve un derrame cerebral. Puedo oírte. No puedo hablar ahora. Por favor, escucha esta voz.", it: "Ho avuto un ictus. Ti sento. Non posso parlare adesso. Per favore, ascolta questa voce.", fr: "J'ai fait un AVC. Je vous entends. Je ne peux pas parler maintenant. Écoutez cette voix, s'il vous plaît.", zh: "我中风了。我听得见。我现在不能说话。请听这个声音。", ja: "私は脳卒中になりました。聞こえています。今は話せません。この声を聞いてください。" },
+  "this is an emergency. i need medical help.": { es: "Esto es una emergencia. Necesito ayuda médica.", it: "È un'emergenza. Ho bisogno di aiuto medico.", fr: "C'est une urgence. J'ai besoin d'une aide médicale.", zh: "这是紧急情况。我需要医疗帮助。", ja: "緊急です。医療の助けが必要です。" },
+  "please call 911.": { es: "Por favor, llama al 911.", it: "Per favore, chiama il 911.", fr: "Appelez le 911, s'il vous plaît.", zh: "请打911。", ja: "911に電話してください。" },
+  "it is hard to breathe.": { es: "Me cuesta respirar.", it: "Faccio fatica a respirare.", fr: "J'ai du mal à respirer.", zh: "我呼吸困难。", ja: "息が苦しいです。" },
+  "please stop.": { es: "Por favor, para.", it: "Per favore, fermati.", fr: "Arrêtez, s'il vous plaît.", zh: "请停一下。", ja: "やめてください。" },
+  "yes.": { es: "Sí.", it: "Sì.", fr: "Oui.", zh: "是的。", ja: "はい。" },
+  "no.": { es: "No.", it: "No.", fr: "Non.", zh: "不是。", ja: "いいえ。" },
+  "please wait. i need a moment.": { es: "Por favor, espera. Necesito un momento.", it: "Per favore, aspetta. Ho bisogno di un momento.", fr: "Attendez, s'il vous plaît. J'ai besoin d'un moment.", zh: "请等一下。我需要一点时间。", ja: "待ってください。少し時間が必要です。" },
+  "please say that again, more slowly.": { es: "Por favor, repítelo más despacio.", it: "Per favore, ripetilo più lentamente.", fr: "Répétez plus lentement, s'il vous plaît.", zh: "请再说一遍，慢一点。", ja: "もっとゆっくり、もう一度言ってください。" },
+  "i do not understand. please say it a different way.": { es: "No entiendo. Por favor, dilo de otra manera.", it: "Non capisco. Per favore, dillo in un altro modo.", fr: "Je ne comprends pas. Dites-le autrement, s'il vous plaît.", zh: "我不明白。请换一种说法。", ja: "わかりません。別の言い方で言ってください。" },
+  "that is not what i mean.": { es: "Eso no es lo que quiero decir.", it: "Non è questo che intendo.", fr: "Ce n'est pas ce que je veux dire.", zh: "我不是这个意思。", ja: "そういう意味ではありません。" },
+  "i can hear you. i just cannot speak.": { es: "Puedo oírte. Solo que no puedo hablar.", it: "Ti sento. Solo che non posso parlare.", fr: "Je vous entends. Je ne peux seulement pas parler.", zh: "我听得见。我只是不能说话。", ja: "聞こえています。話せないだけです。" },
+  "please listen. this phone is speaking for me.": { es: "Por favor, escucha. Este teléfono habla por mí.", it: "Per favore, ascolta. Questo telefono parla per me.", fr: "Écoutez, s'il vous plaît. Ce téléphone parle pour moi.", zh: "请听。这部手机在替我说话。", ja: "聞いてください。この電話が私の代わりに話しています。" },
+  "please speak louder.": { es: "Por favor, habla más alto.", it: "Per favore, parla più forte.", fr: "Parlez plus fort, s'il vous plaît.", zh: "请说大声一点。", ja: "もっと大きな声で話してください。" },
+  "please speak more slowly.": { es: "Por favor, habla más despacio.", it: "Per favore, parla più lentamente.", fr: "Parlez plus lentement, s'il vous plaît.", zh: "请说慢一点。", ja: "もっとゆっくり話してください。" },
+  "goodbye. thank you for calling.": { es: "Adiós. Gracias por llamar.", it: "Arrivederci. Grazie per aver chiamato.", fr: "Au revoir. Merci d'avoir appelé.", zh: "再见。谢谢你打来。", ja: "さようなら。電話してくれてありがとう。" },
+  "i need water.": { es: "Necesito agua.", it: "Ho bisogno di acqua.", fr: "J'ai besoin d'eau.", zh: "我需要水。", ja: "水が必要です。" },
+  "i need the bathroom.": { es: "Necesito el baño.", it: "Ho bisogno del bagno.", fr: "J'ai besoin des toilettes.", zh: "我需要上厕所。", ja: "トイレに行きたいです。" },
+  "i am in pain.": { es: "Me duele.", it: "Ho dolore.", fr: "J'ai mal.", zh: "我疼。", ja: "痛いです。" },
+  "i need my medicine.": { es: "Necesito mi medicina.", it: "Ho bisogno della mia medicina.", fr: "J'ai besoin de mon médicament.", zh: "我需要吃药。", ja: "薬が必要です。" },
+  "i am hungry.": { es: "Tengo hambre.", it: "Ho fame.", fr: "J'ai faim.", zh: "我饿了。", ja: "お腹が空きました。" },
+  "i am thirsty.": { es: "Tengo sed.", it: "Ho sete.", fr: "J'ai soif.", zh: "我渴了。", ja: "のどが渇きました。" },
+  "i am cold.": { es: "Tengo frío.", it: "Ho freddo.", fr: "J'ai froid.", zh: "我冷。", ja: "寒いです。" },
+  "i am too warm.": { es: "Tengo calor.", it: "Ho troppo caldo.", fr: "J'ai trop chaud.", zh: "我太热了。", ja: "暑すぎます。" },
+  "please help me sit up.": { es: "Por favor, ayúdame a sentarme.", it: "Per favore, aiutami a sedermi.", fr: "Aidez-moi à m'asseoir, s'il vous plaît.", zh: "请帮我坐起来。", ja: "起き上がるのを手伝ってください。" },
+  "please help me lie down.": { es: "Por favor, ayúdame a acostarme.", it: "Per favore, aiutami a sdraiarmi.", fr: "Aidez-moi à m'allonger, s'il vous plaît.", zh: "请帮我躺下。", ja: "横になるのを手伝ってください。" },
+  "i need a blanket.": { es: "Necesito una manta.", it: "Ho bisogno di una coperta.", fr: "J'ai besoin d'une couverture.", zh: "我需要一条毯子。", ja: "毛布が必要です。" },
+  "i am tired.": { es: "Estoy cansada.", it: "Sono stanca.", fr: "Je suis fatiguée.", zh: "我累了。", ja: "疲れました。" },
+  "i am scared.": { es: "Tengo miedo.", it: "Ho paura.", fr: "J'ai peur.", zh: "我害怕。", ja: "怖いです。" },
+  "i am okay.": { es: "Estoy bien.", it: "Sto bene.", fr: "Je vais bien.", zh: "我没事。", ja: "大丈夫です。" },
+  "i love you.": { es: "Te quiero.", it: "Ti voglio bene.", fr: "Je vous aime.", zh: "我爱你。", ja: "愛しています。" },
+  "i am frustrated. please be patient with me.": { es: "Estoy frustrada. Por favor, ten paciencia conmigo.", it: "Sono frustrata. Per favore, abbi pazienza con me.", fr: "Je suis frustrée. Soyez patient avec moi, s'il vous plaît.", zh: "我很烦躁。请对我耐心一点。", ja: "イライラしています。どうか待ってください。" },
+  "thank you.": { es: "Gracias.", it: "Grazie.", fr: "Merci.", zh: "谢谢。", ja: "ありがとう。" },
+  "i need the nurse.": { es: "Necesito a la enfermera.", it: "Ho bisogno dell'infermiera.", fr: "J'ai besoin de l'infirmière.", zh: "我需要护士。", ja: "看護師が必要です。" },
+  "i need the doctor.": { es: "Necesito al médico.", it: "Ho bisogno del medico.", fr: "J'ai besoin du médecin.", zh: "我需要医生。", ja: "医者が必要です。" },
+  "please call my family.": { es: "Por favor, llama a mi familia.", it: "Per favore, chiama la mia famiglia.", fr: "Appelez ma famille, s'il vous plaît.", zh: "请给我的家人打电话。", ja: "家族に電話してください。" },
+  "i feel dizzy.": { es: "Me siento mareada.", it: "Mi sento stordita.", fr: "J'ai la tête qui tourne.", zh: "我头晕。", ja: "めまいがします。" },
+  "swallowing is hard.": { es: "Me cuesta tragar.", it: "Faccio fatica a deglutire.", fr: "J'ai du mal à avaler.", zh: "我吞咽困难。", ja: "飲み込むのがつらいです。" },
+  "i feel sick to my stomach.": { es: "Tengo náuseas.", it: "Ho la nausea.", fr: "J'ai mal au cœur.", zh: "我恶心。", ja: "吐き気がします。" },
+  "i have a headache.": { es: "Me duele la cabeza.", it: "Ho mal di testa.", fr: "J'ai mal à la tête.", zh: "我头疼。", ja: "頭が痛いです。" },
+  "i will point to where it hurts.": { es: "Señalaré dónde me duele.", it: "Indicherò dove mi fa male.", fr: "Je vais montrer où j'ai mal.", zh: "我会指出哪里疼。", ja: "痛いところを指さします。" },
+  "this is steadyvoice. can you hear me?": { es: "Soy SteadyVoice. ¿Me oyes?", it: "Sono SteadyVoice. Mi senti?", fr: "C'est SteadyVoice. Vous m'entendez ?", zh: "我是 SteadyVoice。你听得见吗？", ja: "SteadyVoiceです。聞こえますか？" },
+  "can you hear me? i am using steadyvoice because i cannot speak.": { es: "¿Me oyes? Uso SteadyVoice porque no puedo hablar.", it: "Mi senti? Uso SteadyVoice perché non posso parlare.", fr: "Vous m'entendez ? J'utilise SteadyVoice parce que je ne peux pas parler.", zh: "你听得见吗？我用 SteadyVoice，因为我不能说话。", ja: "聞こえますか？話せないので SteadyVoice を使っています。" },
+};
+const LANGS = [["en","English"],["es","Spanish"],["it","Italian"],["fr","French"],["zh","Chinese"],["ja","Japanese"]];
+const BCP = {en:"en-US", es:"es-ES", it:"it-IT", fr:"fr-FR", zh:"zh-CN", ja:"ja-JP"};
+function lineKey(text){ return String(text || "").trim().replace(/\s+/g, " ").toLowerCase(); }
+function knownLine(text, lang){
+  if (!lang || lang === "en") return String(text || "").trim();
+  const row = LINES[lineKey(text)];
+  return row && row[lang] ? row[lang] : "";
+}
+function readTr(){ try { return JSON.parse(localStorage.getItem("steadyvoice.tr.v1") || "{}"); } catch { return {}; } }
+function writeTr(map){
+  const entries = Object.entries(map).slice(-80);
+  try { localStorage.setItem("steadyvoice.tr.v1", JSON.stringify(Object.fromEntries(entries))); } catch {}
+}
+async function deviceTranslate(text, lang){
+  if (!window.Translator) return "";
+  try {
+    const tool = await Translator.create({ sourceLanguage: "en", targetLanguage: lang });
+    return (await tool.translate(text)).trim();
+  } catch { return ""; }
+}
+async function onlineTranslate(text, lang){
+  const code = lang === "zh" ? "zh-CN" : lang;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    const response = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text.slice(0, 400)) + "&langpair=en|" + code, { signal: controller.signal });
+    const data = await response.json();
+    const out = data && data.responseData && data.responseData.translatedText ? String(data.responseData.translatedText).trim() : "";
+    if (!out || /MYMEMORY WARNING|QUERY LENGTH|INVALID/i.test(out)) return "";
+    return out;
+  } catch { return ""; }
+  finally { clearTimeout(timer); }
+}
+async function translateLine(text, lang){
+  const clean = String(text || "").trim();
+  const code = lang || "en";
+  if (!clean || code === "en") return { text: clean, via: "same" };
+  const known = knownLine(clean, code);
+  if (known) return { text: known, via: "known" };
+  const cache = readTr();
+  const key = code + "\u0000" + lineKey(clean);
+  if (cache[key]) return { text: cache[key], via: "online" };
+  const device = await deviceTranslate(clean, code);
+  if (device){ cache[key] = device; writeTr(cache); return { text: device, via: "device" }; }
+  const online = await onlineTranslate(clean, code);
+  if (online){ cache[key] = online; writeTr(cache); return { text: online, via: "online" }; }
+  return { text: clean, via: "english" };
+}
+function pickLangVoice(lang){
+  const all = speechSynthesis.getVoices();
+  if (!lang || lang === "en"){
+    const list = voices();
+    return list.find(v => v.voiceURI === state.settings.voiceURI) || list[0];
+  }
+  const pool = all.filter(v => String(v.lang || "").toLowerCase().replace("_","-").startsWith(lang));
+  return pool[0] || voices()[0];
+}
+async function say(text){
   const clean = text.trim();
   if (!clean || !window.speechSynthesis){ notice = "Open this file in Chrome so the phone can speak."; render(); return; }
   if (navigator.vibrate) navigator.vibrate(12);
@@ -355,19 +460,27 @@ function say(text){
   rememberLine(clean);
   learn(clean);
   save();
+  const lang = state.settings.outputLang || "en";
+  let spoken = clean;
+  if (lang !== "en"){
+    const turned = await translateLine(clean, lang);
+    spoken = turned.text;
+    if (turned.via === "english") notice = "Could not translate that. Said it in English.";
+    else if (!speechSynthesis.getVoices().some(v => String(v.lang || "").toLowerCase().replace("_","-").startsWith(lang))) notice = "This phone has no " + (LANGS.find(item => item[0] === lang) || ["",""])[1] + " voice. The words are still in that language.";
+  }
   resumeVoice();
   speechSynthesis.cancel();
   const shaped = shape();
-  const list = voices();
-  const voice = list.find(v => v.voiceURI === state.settings.voiceURI) || list[0];
+  const voice = pickLangVoice(lang);
   const onCall = liveCall();
-  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.rate = onCall ? Math.min(shaped.rate, 0.8) : shaped.rate; u.pitch = shaped.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
-  speaking = clean;
-  const last = make(clean);
+  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.lang = BCP[lang] || "en-US"; u.rate = onCall ? Math.min(shaped.rate, 0.8) : shaped.rate; u.pitch = shaped.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
+  speaking = spoken;
+  const last = make(spoken);
   last.onend = last.onerror = () => { speaking = ""; render(); };
+  const lead = onCall && state.settings.leadIn ? (knownLine("Please listen.", lang) || "Please listen.") : "";
   setTimeout(() => {
     speechSynthesis.resume();
-    if (onCall && state.settings.leadIn) speechSynthesis.speak(make("Please listen."));
+    if (lead) speechSynthesis.speak(make(lead));
     speechSynthesis.speak(last);
   }, 60);
   applyRoute();
@@ -410,6 +523,18 @@ function paintHints(){
   const chip = (item, kind) => `<button class="chip" data-suggest="${esc(item)}" data-kind="${kind}" type="button">${esc(item)}</button>`;
   if (phraseRow && state.settings.phraseLine !== false) phraseRow.innerHTML = pack.phrases.map(item => chip(item, "phrase")).join("");
   if (wordRow && state.settings.wordLine !== false) wordRow.innerHTML = pack.words.map(item => chip(item, "word")).join("");
+}
+function queueGloss(){
+  clearTimeout(queueGloss.timer);
+  const slot = document.getElementById("gloss");
+  const lang = state.settings.outputLang || "en";
+  if (!slot) return;
+  if (lang === "en" || !draft.trim()){ slot.textContent = ""; return; }
+  queueGloss.timer = setTimeout(async () => {
+    const turned = await translateLine(draft.trim(), lang);
+    const live = document.getElementById("gloss");
+    if (live) live.textContent = turned.via === "english" ? "" : "Will say: " + turned.text;
+  }, 280);
 }
 function bindComposer(){
   const box = document.getElementById("box");
@@ -503,7 +628,8 @@ function board(){
   const boardOpts = arranging ? "" : fold("board", "Board options", `<p class="muted">To move, hide, or restyle buttons, open More and then Arrange.</p>`);
   const tucked = phrases().filter(p => (p.id === "emergency" || p.id === "911") && !(state.hidden||[]).includes(p.id));
   const emergency = tucked.length ? fold("emergency", "Emergency", `<p class="muted">Tucked here so a tap on the board cannot start them.</p><div class="grid" style="margin-top:.4rem">${tucked.map(p => `<button class="pad urgent" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>`) : "";
-  return `${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${emergency}${boardOpts}`;
+  const langNote = (state.settings.outputLang && state.settings.outputLang !== "en") ? `<p class="note">Buttons are spoken in ${esc((LANGS.find(item => item[0] === state.settings.outputLang) || ["","English"])[1])}. Change it under Type a sentence.</p>` : "";
+  return `${langNote}${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${emergency}${boardOpts}`;
 }
 function typer(){
   const mood = Number(state.settings.mood);
@@ -518,6 +644,8 @@ function typer(){
   const pack = typingPack();
   const options = fold("speak", "Typing and extras", `<button class="wide ghost" id="word-line" type="button">${wordOn ? "Word line is on" : "Word line is off"}</button><button class="wide ghost" id="phrase-toggle" type="button">${phraseOn ? "Phrase line is on" : "Phrase line is off"}</button><button class="wide ghost" id="pin-box" type="button">${pinOn ? "Box stays above the keyboard" : "Box stays in place"}</button><button class="wide ${from==="both"?"ink":"ghost"}" data-from="both" type="button">Board and her words</button><button class="wide ${from==="said"?"ink":"ghost"}" data-from="said" type="button">Only words she has said</button><button class="wide ${from==="board"?"ink":"ghost"}" data-from="board" type="button">Only board phrases</button><button class="wide ink" id="do-text" type="button">Text it</button><button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button>`);
   return `<label for="box">What should the phone say?</label>
+    <div class="chips" style="flex-wrap:nowrap;overflow-x:auto">${LANGS.map(([id,label]) => `<button class="chip${(state.settings.outputLang||"en")===id?" on":""}" data-lang="${id}" type="button">${label}</button>`).join("")}</div>
+    <p class="muted" id="gloss"></p>
     <div id="composer">
       ${phraseOn ? hintRow(pack.phrases, "phrase") : `<div id="phrase-line"></div>`}
       ${wordOn ? hintRow(pack.words, "word") : `<div id="word-line"></div>`}
@@ -664,8 +792,9 @@ view.addEventListener("click", (event) => {
   if (t.id === "pin-box"){ state.settings.pinBox = state.settings.pinBox === false; save(); render(); return; }
   if (t.dataset.from){ state.settings.hintFrom = t.dataset.from; save(); render(); return; }
   if (t.id === "do-say") say(draft);
-  if (t.id === "do-text" && draft.trim()) textIt(draft.trim());
-  if (t.id === "do-wa" && draft.trim()) wa(draft.trim());
+  if (t.dataset.lang){ state.settings.outputLang = t.dataset.lang; save(); render(); queueGloss(); return; }
+  if (t.id === "do-text" && draft.trim()){ translateLine(draft.trim(), state.settings.outputLang || "en").then(result => textIt(result.text)); return; }
+  if (t.id === "do-wa" && draft.trim()){ translateLine(draft.trim(), state.settings.outputLang || "en").then(result => wa(result.text)); return; }
   if (t.id === "lead"){ state.settings.leadIn = !state.settings.leadIn; save(); render(); }
 });
 view.addEventListener("input", (event) => {
@@ -674,6 +803,7 @@ view.addEventListener("input", (event) => {
     draft = event.target.value;
     event.target.scrollTop = event.target.scrollHeight;
     paintHints();
+    queueGloss();
   }
   if (event.target.id === "mood"){
     state.settings.mood = Number(event.target.value);
