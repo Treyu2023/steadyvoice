@@ -52,6 +52,11 @@
   ol { margin: .4rem 0 0; padding-left: 1.1rem; }
   html[data-theme="night"] { --paper:#141311; --ink:#f4efe8; --card:#241f1b; --line:#3c342c; --muted:#b7ab9e; --teal:#3dbaad; --soft:#1a3330; --rose:#e08a82; --rose-soft:#3a2422; --on:#06221f; }
   .tools { display:flex; flex-wrap:wrap; gap:.4rem; margin:.4rem 0 .6rem; }
+  #sound { margin: 0 0 .7rem; }
+  #sound .pick { min-height: 3.4rem; text-align: left; }
+  #sound .pick.on-speaker { background: var(--teal); color: var(--on); border-color: transparent; }
+  #sound .pick.on-call { background: var(--rose); color: var(--on); border-color: transparent; }
+  #sound .sub { display: block; font-size: .75rem; font-weight: 500; opacity: .85; }
 </style>
 </head>
 <body>
@@ -60,8 +65,8 @@
       <p class="kicker">SteadyVoice</p>
       <h1 id="title">Say it</h1>
     </div>
-    <button id="call-toggle" class="callbtn" type="button">Call mode</button>
   </div>
+  <div id="sound"></div>
   <nav class="tabs" aria-label="Sections">
     <button class="tab on" data-tab="board" type="button">Board</button>
     <button class="tab" data-tab="say" type="button">Type</button>
@@ -127,14 +132,42 @@ const MALE = /\bmale\b|\bdavid\b|\bdaniel\b|\balex\b|\bfred\b|\bguy\b|\bgeorge\b
 const KEY = "steadyvoice.call.v2";
 const $= (s,r=document) => r.querySelector(s);
 const view = $("#view");
-let tab = "board", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false;
+let tab = "board", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false;
 let state = load();
 function load(){
-  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true}};
+  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true, output:"auto"}};
   try { return Object.assign(blank, JSON.parse(localStorage.getItem(KEY)||"null")||{}, {settings:Object.assign(blank.settings,(JSON.parse(localStorage.getItem(KEY)||"{}").settings)||{})}); }
   catch { return blank; }
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }
+function liveCall(){
+  const output = state.settings.output || "auto";
+  return output === "call" || (output === "auto" && detectedCall);
+}
+async function applyRoute(){
+  const on = liveCall();
+  state.settings.callMode = on;
+  try { if (navigator.audioSession) navigator.audioSession.type = on ? "play-and-record" : "playback"; } catch {}
+  try { if (on && navigator.wakeLock) await navigator.wakeLock.request("screen"); } catch {}
+}
+function renderSound(){
+  const box = $("#sound");
+  if (!box) return;
+  const onCall = liveCall();
+  const output = state.settings.output || "auto";
+  const extra = soundOpen ? `<div class="card">
+      <button class="wide ${output==="auto"?"ink":"ghost"}" data-out="auto" type="button">${output==="auto"?"Auto is on":"Auto is off"} — follow a phone call</button>
+      <button class="wide ghost" id="sound-lead" type="button" style="margin-top:.4rem">${state.settings.leadIn ? "On a call, starts with Please listen" : "On a call, phrase only"}</button>
+      <button class="wide teal" id="sound-test" type="button" style="margin-top:.4rem">Test this sound</button>
+      <p class="muted">On the phone’s call screen, tap Speaker and turn the volume up. A computer uses its current speaker.</p>
+    </div>` : "";
+  const hint = output === "auto" && detectedCall ? `<p class="muted">A call took the sound. Tap Speaker to override.</p>` : "";
+  box.innerHTML = `<div class="grid">
+      <button class="pick ${onCall ? "" : "on-speaker"}" data-out="speaker" type="button">Speaker<span class="sub">${output==="auto" && !onCall ? "Auto · out loud" : "Out loud"}</span></button>
+      <button class="pick ${onCall ? "on-call" : ""}" data-out="call" type="button">Phone call<span class="sub">${output==="auto" && onCall ? "Auto · on the line" : "On the line"}</span></button>
+    </div>${hint}
+    <button class="wide ghost" id="sound-more" type="button" style="margin-top:.35rem">${soundOpen ? "Hide sound options" : "Sound options"}</button>${extra}`;
+}
 function phrases(){ return PHRASES.concat(state.custom||[]); }
 function preset(){ return PRESETS.find(p => p.id === state.settings.presetId) || PRESETS[4]; }
 function voices(){
@@ -166,29 +199,27 @@ function say(text){
   const p = preset();
   const list = voices();
   const voice = list.find(v => v.voiceURI === state.settings.voiceURI) || list[0];
-  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.rate = state.settings.callMode ? Math.min(p.rate, 0.8) : p.rate; u.pitch = p.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
+  const onCall = liveCall();
+  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.rate = onCall ? Math.min(p.rate, 0.8) : p.rate; u.pitch = p.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
   speaking = clean;
   const last = make(clean);
   last.onend = last.onerror = () => { speaking = ""; render(); };
   setTimeout(() => {
     speechSynthesis.resume();
-    if (state.settings.callMode && state.settings.leadIn) speechSynthesis.speak(make("Please listen."));
+    if (onCall && state.settings.leadIn) speechSynthesis.speak(make("Please listen."));
     speechSynthesis.speak(last);
   }, 60);
-  try {
-    if (state.settings.callMode && navigator.audioSession) navigator.audioSession.type = "play-and-record";
-  } catch {}
+  applyRoute();
   render();
 }
 function textIt(text){ location.href = "sms:?&body=" + encodeURIComponent(text); }
 function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
 function render(){
   document.documentElement.dataset.theme = (state.settings.theme === "night") ? "night" : "paper";
+  renderSound();
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = state.settings.showDock === false ? "none" : "";
   $("#title").textContent = tab === "call" ? "On a call" : tab === "say" ? "Type it" : tab === "more" ? "More" : "Say it";
-  $("#call-toggle").className = "callbtn" + (state.settings.callMode ? " on" : "");
-  $("#call-toggle").textContent = state.settings.callMode ? "Call mode on" : "Call mode";
   document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
   const banner = (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "");
   if (tab === "board") view.innerHTML = banner + board();
@@ -257,8 +288,7 @@ function typer(){
 function call(){
   const women = voices();
   return `<div class="card"><h2 style="margin:.1rem 0 .4rem">So the other person can hear her</h2>
-    <ol><li>Start the phone call as usual.</li><li>Tap Speaker. Turn the volume all the way up.</li><li>Come back here and tap a button. Hold the phone a little away, speaker facing up.</li></ol>
-    <p>iPhone and Android will not let an app replace her voice inside a regular phone call. Speaker mode is the way that works: the voice comes out of the speaker, the microphone hears it, and the person on the line hears her.</p></div>
+    <p>Tap Phone call at the top. On the call screen, tap Speaker, turn the volume up, and hold the phone a little away. She is heard through the microphone.</p></div>
     <button class="wide teal" data-speak="Can you hear me? I am using SteadyVoice because I cannot speak." type="button">Test: Can you hear me?</button>
     <button class="wide ghost" id="lead" type="button" style="margin-top:.5rem">${state.settings.leadIn ? "On: starts with Please listen" : "Off: phrase only"}</button>
     <p class="kicker" style="margin:1rem 0 .4rem">Woman's voice${women[0] ? " · " + esc(women[0].name) : ""}</p>
@@ -311,12 +341,20 @@ view.addEventListener("input", (event) => {
   if (event.target.id === "name"){ state.settings.name = event.target.value; save(); }
 });
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.tab; notice = ""; render(); });
-$("#call-toggle").onclick = async () => {
-  state.settings.callMode = !state.settings.callMode;
-  save();
-  if (state.settings.callMode){ tab = "call"; try { if (navigator.wakeLock) await navigator.wakeLock.request("screen"); } catch {} }
-  render();
-};
+$("#sound").addEventListener("click", (event) => {
+  const t = event.target.closest("button");
+  if (!t) return;
+  if (t.id === "sound-more"){ soundOpen = !soundOpen; renderSound(); return; }
+  if (t.id === "sound-lead"){ state.settings.leadIn = !state.settings.leadIn; save(); renderSound(); return; }
+  if (t.id === "sound-test"){ say("This is SteadyVoice. Can you hear me?"); return; }
+  if (t.dataset.out){
+    state.settings.output = t.dataset.out;
+    if (t.dataset.out !== "auto") soundOpen = false;
+    save();
+    applyRoute();
+    render();
+  }
+});
 $("#stop").onclick = () => { speechSynthesis.cancel(); speaking = ""; render(); };
 $("#again").onclick = () => { if (state.history[0]) say(state.history[0]); };
 document.body.addEventListener("click", (event) => {
@@ -324,6 +362,17 @@ document.body.addEventListener("click", (event) => {
   if (t && t.closest("footer")) say(t.dataset.say);
 });
 if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { if (tab === "more" || tab === "call") render(); };
+if (navigator.audioSession && navigator.audioSession.addEventListener) {
+  navigator.audioSession.addEventListener("statechange", () => {
+    const next = navigator.audioSession.state === "interrupted";
+    if (next === detectedCall) return;
+    detectedCall = next;
+    if ((state.settings.output || "auto") === "auto") notice = next ? "A call took over the sound. Phone call is on." : "Sound is back on the speaker.";
+    applyRoute();
+    render();
+  });
+}
+applyRoute();
 render();
 </script>
 </body>
