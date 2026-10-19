@@ -221,6 +221,43 @@ function suggestions(text){
   }));
   return Array.from(words.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(pair => pair[0]);
 }
+function typingPack(){
+  const from = state.settings.hintFrom || "both";
+  const risky = /911|emergency/i.test(draft);
+  const safe = (text) => risky || !/911|emergency/i.test(text);
+  const query = String(draft || "").trim().toLowerCase();
+  const token = query.split(/\s+/).pop() || "";
+  const said = (state.learned || []).filter(item => item && item.text && safe(item.text));
+  const board = phrases().filter(item => item.id !== "emergency" && item.id !== "911" && safe(item.speak));
+  const lines = [];
+  const seen = new Set();
+  const push = (text) => {
+    const key = String(text || "").trim().toLowerCase();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    lines.push(String(text).trim());
+  };
+  if (from !== "board") said.forEach(item => push(item.text));
+  if (from !== "said") board.forEach(item => push(item.speak));
+  const phraseHits = (query ? lines.filter(line => line.toLowerCase().includes(query) && line.toLowerCase() !== query) : lines).slice(0, 8);
+  const counts = new Map();
+  const labels = new Map();
+  const note = (word, count) => {
+    const clean = String(word || "").replace(/[^a-zA-Z']/g, "");
+    if (clean.length < 2) return;
+    const key = clean.toLowerCase();
+    counts.set(key, (counts.get(key) || 0) + count);
+    if (!labels.has(key)) labels.set(key, clean);
+  };
+  if (from !== "board") said.forEach(item => item.text.split(/\s+/).forEach(word => note(word, item.count || 1)));
+  if (from !== "said") board.forEach(item => item.speak.split(/\s+/).forEach(word => note(word, 1)));
+  ["I","need","want","please","help","water","pain","yes","no","wait","thank"].forEach(word => note(word, 0));
+  const wordHits = Array.from(labels.entries()).filter(pair => !token || (pair[0].startsWith(token) && pair[0] !== token)).sort((a, b) => (counts.get(b[0]) || 0) - (counts.get(a[0]) || 0)).slice(0, 8).map(pair => pair[1]);
+  return { words: wordHits, phrases: phraseHits };
+}
+function hintRow(items, kind){
+  return `<div class="chips" id="${kind}-line" style="flex-wrap:nowrap;overflow-x:auto">${items.map(item => `<button class="chip" data-suggest="${esc(item)}" data-kind="${kind}" type="button">${esc(item)}</button>`).join("")}</div>`;
+}
 function load(){
   const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], talks:[], currentId:"", learned:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"night", sort:"used", columns:2, showChips:true, showDock:true, output:"auto", mood:50, comedyId:"", themeChosen:false, seenTutorial:false}};
   try { return Object.assign(blank, JSON.parse(localStorage.getItem(KEY)||"null")||{}, {settings:Object.assign(blank.settings,(JSON.parse(localStorage.getItem(KEY)||"{}").settings)||{})}); }
@@ -232,22 +269,16 @@ function liveCall(){
   return output === "call" || (output === "auto" && detectedCall);
 }
 let screenLock = null;
-let renewing = false;
 async function applyRoute(){
   const on = liveCall();
   state.settings.callMode = on;
   try { if (navigator.audioSession) navigator.audioSession.type = on ? "play-and-record" : "playback"; } catch {}
-  const held = screenLock;
+  try { if (screenLock) await screenLock.release(); } catch {}
   screenLock = null;
-  renewing = true;
-  try { if (held) await held.release(); } catch {}
-  renewing = false;
   if (!on || document.visibilityState === "hidden" || !navigator.wakeLock) return;
   try {
-    const next = await navigator.wakeLock.request("screen");
-    screenLock = next;
-    next.addEventListener("release", () => {
-      if (renewing || screenLock !== next) return;
+    screenLock = await navigator.wakeLock.request("screen");
+    screenLock.addEventListener("release", () => {
       screenLock = null;
       if (liveCall() && document.visibilityState === "visible") applyRoute();
     });
@@ -370,6 +401,42 @@ function render(){
   else if (tab === "say") view.innerHTML = banner + typer() + guide;
   else if (tab === "call") view.innerHTML = banner + call() + guide;
   else view.innerHTML = banner + more() + guide;
+  if (tab === "say") bindComposer();
+}
+function paintHints(){
+  const pack = typingPack();
+  const phraseRow = document.getElementById("phrase-line");
+  const wordRow = document.getElementById("word-line");
+  const chip = (item, kind) => `<button class="chip" data-suggest="${esc(item)}" data-kind="${kind}" type="button">${esc(item)}</button>`;
+  if (phraseRow && state.settings.phraseLine !== false) phraseRow.innerHTML = pack.phrases.map(item => chip(item, "phrase")).join("");
+  if (wordRow && state.settings.wordLine !== false) wordRow.innerHTML = pack.words.map(item => chip(item, "word")).join("");
+}
+function bindComposer(){
+  const box = document.getElementById("box");
+  const bar = document.getElementById("composer");
+  if (!box || !bar) return;
+  const place = () => {
+    const view = window.visualViewport;
+    const overlap = view ? Math.max(0, window.innerHeight - view.height - view.offsetTop) : 0;
+    const up = state.settings.pinBox !== false && document.activeElement === box && overlap > 40;
+    bar.style.position = up ? "fixed" : "";
+    bar.style.left = up ? "0" : "";
+    bar.style.right = up ? "0" : "";
+    bar.style.bottom = up ? overlap + "px" : "";
+    bar.style.zIndex = up ? "30" : "";
+    bar.style.background = up ? "var(--paper)" : "";
+    bar.style.padding = up ? ".5rem 1rem .6rem" : "";
+    const footer = document.querySelector("footer");
+    if (footer) footer.style.display = document.activeElement === box ? "none" : "";
+    box.scrollTop = box.scrollHeight;
+  };
+  box.addEventListener("focus", place);
+  box.addEventListener("blur", () => setTimeout(place, 80));
+  if (window.visualViewport){
+    window.visualViewport.addEventListener("resize", place);
+    window.visualViewport.addEventListener("scroll", place);
+  }
+  place();
 }
 function menu(){
   const rows = [
@@ -444,16 +511,25 @@ function typer(){
   const word = moodSafe < 35 ? "Soft" : moodSafe > 65 ? "Harsh" : "Natural";
   const comedy = state.settings.comedyId || "";
   const chips = [{id:"", name:"Normal"}].concat(COMEDY).map(item => `<button class="chip${comedy===item.id?" on":""}" data-comedy="${item.id}" type="button">${item.name}</button>`).join("");
-  const options = fold("speak", "Speak options", `<button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button><div class="chips" style="margin-top:.6rem">${["I","need","please","help","water","pain","yes","no"].map(w => `<button class="chip" data-word="${w}" type="button">${w}</button>`).join("")}</div>`);
-  const ideas = suggestions(draft).map(item => `<button class="chip" data-suggest="${esc(item)}" type="button">${esc(item)}</button>`).join("");
+  const wordOn = state.settings.wordLine !== false;
+  const phraseOn = state.settings.phraseLine !== false;
+  const pinOn = state.settings.pinBox !== false;
+  const from = state.settings.hintFrom || "both";
+  const pack = typingPack();
+  const options = fold("speak", "Typing and extras", `<button class="wide ghost" id="word-line" type="button">${wordOn ? "Word line is on" : "Word line is off"}</button><button class="wide ghost" id="phrase-toggle" type="button">${phraseOn ? "Phrase line is on" : "Phrase line is off"}</button><button class="wide ghost" id="pin-box" type="button">${pinOn ? "Box stays above the keyboard" : "Box stays in place"}</button><button class="wide ${from==="both"?"ink":"ghost"}" data-from="both" type="button">Board and her words</button><button class="wide ${from==="said"?"ink":"ghost"}" data-from="said" type="button">Only words she has said</button><button class="wide ${from==="board"?"ink":"ghost"}" data-from="board" type="button">Only board phrases</button><button class="wide ink" id="do-text" type="button">Text it</button><button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button>`);
   return `<label for="box">What should the phone say?</label>
-    <textarea id="box">${esc(draft)}</textarea>
-    ${ideas ? `<div class="chips" style="margin:.4rem 0 .6rem">${ideas}</div>` : ""}
+    <div id="composer">
+      ${phraseOn ? hintRow(pack.phrases, "phrase") : `<div id="phrase-line"></div>`}
+      ${wordOn ? hintRow(pack.words, "word") : `<div id="word-line"></div>`}
+      <div class="row" style="align-items:stretch">
+        <textarea id="box" rows="2" style="min-height:4.2rem;margin:0;flex:1">${esc(draft)}</textarea>
+        <button class="teal" id="do-say" type="button" style="width:6rem">Say it</button>
+      </div>
+    </div>
     <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Soft</span><input id="mood" type="range" min="0" max="100" value="${moodSafe}" aria-label="Mood, from soft to harsh" style="flex:1;accent-color:#0e6b62"><span class="muted">Harsh</span></div>
     <p class="muted" id="mood-word">${word}</p>
     <p style="margin:.4rem 0 .2rem;font-weight:600">Play voices</p>
     <div class="chips">${chips}</div>
-    <div class="grid"><button class="wide teal" id="do-say" type="button">Say it</button><button class="wide ink" id="do-text" type="button">Text it</button></div>
     ${options}`;
 }
 function call(){
@@ -497,6 +573,10 @@ function more(){
     <p class="muted">Arrange is locked until you tap that. Done locks it again. Nothing is uploaded.</p>
     ${fold("more", "More options", `<label>Her name<input id="name" value="${esc(state.settings.name||"")}" placeholder="First name"></label>`)}`;
 }
+view.addEventListener("pointerdown", (event) => {
+  const hint = event.target.closest("[data-suggest], #do-say");
+  if (hint && document.activeElement && document.activeElement.id === "box") event.preventDefault();
+});
 view.addEventListener("click", (event) => {
   const t = event.target.closest("button");
   if (!t) return;
@@ -510,16 +590,20 @@ view.addEventListener("click", (event) => {
   }
   if (t.dataset.suggest){
     const suggestion = t.dataset.suggest;
-    const current = draft.trim();
-    if (!current || suggestion.toLowerCase().startsWith(current.toLowerCase())) draft = suggestion;
+    const kind = t.dataset.kind || "word";
+    if (kind === "phrase") draft = suggestion;
     else {
-      const parts = current.split(/\s+/);
-      parts[parts.length - 1] = suggestion;
-      draft = parts.join(" ") + " ";
+      const current = draft.trim();
+      if (!current || suggestion.toLowerCase().startsWith(current.toLowerCase())) draft = suggestion + " ";
+      else {
+        const parts = current.split(/\s+/);
+        parts[parts.length - 1] = suggestion;
+        draft = parts.join(" ") + " ";
+      }
     }
     render();
     const box = $("#box");
-    if (box) box.focus();
+    if (box){ box.focus(); box.scrollTop = box.scrollHeight; }
     return;
   }
   if (t.id === "guide-next"){
@@ -575,6 +659,10 @@ view.addEventListener("click", (event) => {
     return;
   }
   if (t.dataset.word){ draft = (draft ? draft.trim() + " " : "") + t.dataset.word; render(); const box = $("#box"); if (box) box.focus(); return; }
+  if (t.id === "word-line"){ state.settings.wordLine = state.settings.wordLine === false; save(); render(); return; }
+  if (t.id === "phrase-toggle"){ state.settings.phraseLine = state.settings.phraseLine === false; save(); render(); return; }
+  if (t.id === "pin-box"){ state.settings.pinBox = state.settings.pinBox === false; save(); render(); return; }
+  if (t.dataset.from){ state.settings.hintFrom = t.dataset.from; save(); render(); return; }
   if (t.id === "do-say") say(draft);
   if (t.id === "do-text" && draft.trim()) textIt(draft.trim());
   if (t.id === "do-wa" && draft.trim()) wa(draft.trim());
@@ -582,7 +670,11 @@ view.addEventListener("click", (event) => {
 });
 view.addEventListener("input", (event) => {
   if (event.target.id === "q"){ query = event.target.value; const pos = event.target.selectionStart; render(); const q = $("#q"); if (q){ q.focus(); q.selectionStart = q.selectionEnd = pos; } }
-  if (event.target.id === "box") draft = event.target.value;
+  if (event.target.id === "box"){
+    draft = event.target.value;
+    event.target.scrollTop = event.target.scrollHeight;
+    paintHints();
+  }
   if (event.target.id === "mood"){
     state.settings.mood = Number(event.target.value);
     const word = state.settings.mood < 35 ? "Soft" : state.settings.mood > 65 ? "Harsh" : "Natural";
