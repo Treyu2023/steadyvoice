@@ -134,8 +134,64 @@ const $= (s,r=document) => r.querySelector(s);
 const view = $("#view");
 let tab = "board", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false;
 let state = load();
+function talkStamp(at){ return new Date(at).toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
+function ensureTalks(){
+  if (!Array.isArray(state.talks)) state.talks = [];
+  if (!state.talks.some(talk => talk && talk.id === state.currentId)){
+    const at = Date.now();
+    const fresh = {id:"talk-"+at, title:talkStamp(at), at:at, lines:[]};
+    state.talks.unshift(fresh);
+    state.currentId = fresh.id;
+  }
+}
+function rememberLine(line){
+  ensureTalks();
+  const now = Date.now();
+  let current = state.talks.find(talk => talk.id === state.currentId);
+  if (current && current.lines.length){
+    const start = new Date(current.at), today = new Date(now);
+    if (start.getFullYear() !== today.getFullYear() || start.getMonth() !== today.getMonth() || start.getDate() !== today.getDate()){
+      const fresh = {id:"talk-"+now, title:talkStamp(now), at:now, lines:[]};
+      state.talks.unshift(fresh);
+      state.currentId = fresh.id;
+      current = fresh;
+    }
+  }
+  current.lines = (current.lines || []).concat(line).slice(-80);
+  state.talks = state.talks.filter(talk => (talk.lines && talk.lines.length) || talk.id === state.currentId).slice(0, 40);
+}
+function replayTalk(id){
+  const talk = (state.talks || []).find(item => item.id === id);
+  if (!talk || !talk.lines.length || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const shaped = shape();
+  const list = voices();
+  const voice = list.find(item => item.voiceURI === state.settings.voiceURI) || list[0];
+  talk.lines.forEach(line => {
+    const utter = new SpeechSynthesisUtterance(line);
+    utter.rate = shaped.rate;
+    utter.pitch = shaped.pitch;
+    utter.volume = 1;
+    if (voice) utter.voice = voice;
+    speechSynthesis.speak(utter);
+  });
+}
+function saveTalk(){
+  ensureTalks();
+  const current = state.talks.find(talk => talk.id === state.currentId);
+  if (!current || !current.lines.length){ notice = "Nothing to save yet."; render(); return; }
+  const at = Date.now();
+  const fresh = {id:"talk-"+at, title:talkStamp(at), at:at, lines:[]};
+  state.currentId = fresh.id;
+  state.talks = [fresh].concat(state.talks.filter(talk => talk.lines && talk.lines.length)).slice(0, 40);
+  notice = "Saved. A new talk is ready.";
+  openTalk = "";
+  save();
+  render();
+}
+ensureTalks();
 function load(){
-  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true, output:"auto", mood:50, comedyId:""}};
+  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], talks:[], currentId:"", settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true, output:"auto", mood:50, comedyId:""}};
   try { return Object.assign(blank, JSON.parse(localStorage.getItem(KEY)||"null")||{}, {settings:Object.assign(blank.settings,(JSON.parse(localStorage.getItem(KEY)||"{}").settings)||{})}); }
   catch { return blank; }
 }
@@ -215,6 +271,7 @@ function say(text){
   const hit = phrases().find(p => p.speak === clean);
   state.uses = state.uses || {};
   if (hit) state.uses[hit.id] = (state.uses[hit.id] || 0) + 1;
+  rememberLine(clean);
   save();
   speechSynthesis.cancel();
   const shaped = shape();
@@ -324,9 +381,32 @@ function call(){
     <div class="grid" style="margin-top:.7rem">${phrases().slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>
     ${fold("call", "Call options", `<button class="wide ghost" id="lead" type="button">${state.settings.leadIn ? "Starts with Please listen" : "Phrase only"}</button><div class="voices" style="margin-top:.5rem">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b></button>`).join("")}</div>`)}`;
 }
+let openTalk = "";
 function more(){
   const women = voices();
-  return `<div class="card"><b>Women's voices</b><p>Clara, Helen, June, Mae, and Nora use the best woman's voice on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No woman's voice yet. In the phone settings, download an English woman's text-to-speech voice, then reopen this page."}</p>
+  ensureTalks();
+  if (openTalk){
+    const talk = state.talks.find(item => item.id === openTalk);
+    if (talk) return `<button class="wide ghost" id="close-talk" type="button">Back</button>
+      <h2 style="margin:.6rem 0 .3rem">${esc(talk.title)}</h2>
+      <button class="wide teal" id="replay-open" type="button">Say this talk again</button>
+      ${talk.lines.map(line => `<button class="wide ghost" data-speak="${esc(line)}" type="button" style="margin-top:.4rem">${esc(line)}</button>`).join("")}
+      <button class="wide" id="delete-talk" type="button" style="margin-top:.7rem">Delete this talk</button>`;
+    openTalk = "";
+  }
+  const current = state.talks.find(item => item.id === state.currentId) || {title:"", lines:[]};
+  const earlier = state.talks.filter(item => item.id !== state.currentId && item.lines && item.lines.length);
+  const recent = current.lines.slice(-4).map(line => `<p class="muted">${esc(line)}</p>`).join("") || `<p class="muted">Nothing yet. Tap a button and it will show up here.</p>`;
+  const old = earlier.map(item => `<button class="wide ghost" data-open-talk="${esc(item.id)}" type="button" style="margin-top:.4rem"><b>${esc(item.title)}</b><br><span class="muted">${item.lines.length} lines · ${esc(item.lines[0])}</span></button>`).join("");
+  return `<div class="card"><b>Conversations</b><p>What she says is kept on this phone, in order. Save a talk to start a fresh one and still say the old one later.</p>
+    <p><b>This talk</b> · ${esc(current.title || "")}</p>
+    ${recent}
+    <button class="wide teal" id="replay-current" type="button" ${current.lines.length ? "" : "disabled"}>Say this talk again</button>
+    <button class="wide ink" id="save-talk" type="button" style="margin-top:.4rem" ${current.lines.length ? "" : "disabled"}>Save and start a new talk</button>
+    ${current.lines.length ? `<button class="wide ghost" data-open-talk="${esc(state.currentId)}" type="button" style="margin-top:.4rem">See every line</button>` : ""}
+    ${old ? `<p class="kicker" style="margin-top:.8rem">Earlier</p>${old}` : ""}
+  </div>
+    <div class="card"><b>Women's voices</b><p>Clara, Helen, June, Mae, and Nora use the best woman's voice on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No woman's voice yet. In the phone settings, download an English woman's text-to-speech voice, then reopen this page."}</p>
     <div class="voices">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div></div>
     <div class="card"><b>Text a phrase</b><p>Text opens the phone's own Messages app with the words filled in. She taps Send. WhatsApp does the same if it is installed. A new messaging app is not required.</p>
     <button class="wide ink" data-speak="" data-text="I had a stroke. I can hear you. I cannot speak. Please read this text." type="button">Text: I cannot speak</button></div>
@@ -339,6 +419,20 @@ view.addEventListener("click", (event) => {
   const t = event.target.closest("button");
   if (!t) return;
   if (t.dataset.fold){ folds[t.dataset.fold] = !folds[t.dataset.fold]; render(); return; }
+  if (t.id === "replay-current"){ replayTalk(state.currentId); return; }
+  if (t.id === "replay-open"){ replayTalk(openTalk); return; }
+  if (t.id === "save-talk"){ saveTalk(); return; }
+  if (t.id === "close-talk"){ openTalk = ""; render(); return; }
+  if (t.id === "delete-talk"){
+    state.talks = (state.talks || []).filter(item => item.id !== openTalk);
+    if (openTalk === state.currentId) state.currentId = "";
+    openTalk = "";
+    ensureTalks();
+    save();
+    render();
+    return;
+  }
+  if (t.dataset.openTalk){ openTalk = t.dataset.openTalk; render(); return; }
   if (t.dataset.comedy !== undefined){
     state.settings.comedyId = t.dataset.comedy;
     save();
