@@ -69,7 +69,7 @@
   <div id="sound"></div>
   <nav class="tabs" aria-label="Sections">
     <button class="tab on" data-tab="board" type="button">Board</button>
-    <button class="tab" data-tab="say" type="button">Type</button>
+    <button class="tab" data-tab="say" type="button">Speak</button>
     <button class="tab" data-tab="call" type="button">Call</button>
     <button class="tab" data-tab="more" type="button">More</button>
   </nav>
@@ -135,7 +135,7 @@ const view = $("#view");
 let tab = "board", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false;
 let state = load();
 function load(){
-  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true, output:"auto"}};
+  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"paper", sort:"used", columns:2, showChips:true, showDock:true, output:"auto", mood:50, comedyId:""}};
   try { return Object.assign(blank, JSON.parse(localStorage.getItem(KEY)||"null")||{}, {settings:Object.assign(blank.settings,(JSON.parse(localStorage.getItem(KEY)||"{}").settings)||{})}); }
   catch { return blank; }
 }
@@ -170,6 +170,27 @@ function renderSound(){
 }
 function phrases(){ return PHRASES.concat(state.custom||[]); }
 function preset(){ return PRESETS.find(p => p.id === state.settings.presetId) || PRESETS[4]; }
+const COMEDY = [
+  {id:"sweet", name:"Sweet", rate:0.84, pitch:1.22},
+  {id:"giggle", name:"Giggle", rate:1.05, pitch:1.38},
+  {id:"drama", name:"Drama", rate:0.68, pitch:0.82},
+  {id:"grumpy", name:"Grumpy", rate:0.96, pitch:0.7}
+];
+let folds = {};
+function shape(){
+  const comedy = COMEDY.find(item => item.id === state.settings.comedyId);
+  const base = comedy || preset();
+  const mood = Math.min(100, Math.max(0, Number(state.settings.mood)));
+  const safe = Number.isFinite(mood) ? mood : 50;
+  return {
+    rate: Math.min(1.35, Math.max(0.5, base.rate * (1 + (safe - 50) / 280))),
+    pitch: Math.min(2, Math.max(0.45, base.pitch * (1 + (50 - safe) / 180)))
+  };
+}
+function fold(id, label, inner){
+  const open = !!folds[id];
+  return `<button class="wide ghost" data-fold="${id}" type="button" style="margin-top:.7rem">${open ? "Hide " + label : label}</button>` + (open ? `<div class="card">${inner}</div>` : "");
+}
 function voices(){
   const all = window.speechSynthesis ? speechSynthesis.getVoices() : [];
   const en = all.filter(v => v.lang.toLowerCase().startsWith("en"));
@@ -196,11 +217,11 @@ function say(text){
   if (hit) state.uses[hit.id] = (state.uses[hit.id] || 0) + 1;
   save();
   speechSynthesis.cancel();
-  const p = preset();
+  const shaped = shape();
   const list = voices();
   const voice = list.find(v => v.voiceURI === state.settings.voiceURI) || list[0];
   const onCall = liveCall();
-  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.rate = onCall ? Math.min(p.rate, 0.8) : p.rate; u.pitch = p.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
+  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.rate = onCall ? Math.min(shaped.rate, 0.8) : shaped.rate; u.pitch = shaped.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
   speaking = clean;
   const last = make(clean);
   last.onend = last.onerror = () => { speaking = ""; render(); };
@@ -219,7 +240,7 @@ function render(){
   renderSound();
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = state.settings.showDock === false ? "none" : "";
-  $("#title").textContent = tab === "call" ? "On a call" : tab === "say" ? "Type it" : tab === "more" ? "More" : "Say it";
+  $("#title").textContent = tab === "call" ? "On a call" : tab === "say" ? "Speak" : tab === "more" ? "More" : "Say it";
   document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
   const banner = (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "");
   if (tab === "board") view.innerHTML = banner + board();
@@ -276,39 +297,58 @@ function board(){
     : `<button class="pad ${p.tone}" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b><span>${esc(p.group)}</span></button>`).join("");
   const hidden = (state.hidden||[]).map(id => phrases().find(p => p.id === id)).filter(Boolean);
   const back = arranging && hidden.length ? `<p class="kicker">Hidden</p>` + hidden.map(p => `<button class="wide ghost" data-show="${esc(p.id)}" type="button">Put back: ${esc(p.label)}</button>`).join("") : "";
-  return `${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}`;
+  const note = !arranging && state.settings.comedyId ? `<button class="wide" id="reset-voice" type="button" style="margin-bottom:.5rem">Playing ${esc((COMEDY.find(item => item.id === state.settings.comedyId)||{}).name || "a play voice")}. Tap for her normal voice.</button>` : "";
+  const boardOpts = arranging ? "" : fold("board", "Board options", `<p class="muted">To move, hide, or restyle buttons, open More and then Arrange.</p>`);
+  return `${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${boardOpts}`;
 }
 function typer(){
+  const mood = Number(state.settings.mood);
+  const moodSafe = Number.isFinite(mood) ? mood : 50;
+  const word = moodSafe < 35 ? "Soft" : moodSafe > 65 ? "Harsh" : "Natural";
+  const comedy = state.settings.comedyId || "";
+  const chips = [{id:"", name:"Normal"}].concat(COMEDY).map(item => `<button class="chip${comedy===item.id?" on":""}" data-comedy="${item.id}" type="button">${item.name}</button>`).join("");
+  const options = fold("speak", "Speak options", `<button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button><div class="chips" style="margin-top:.6rem">${["I","need","please","help","water","pain","yes","no"].map(w => `<button class="chip" data-word="${w}" type="button">${w}</button>`).join("")}</div>`);
   return `<label for="box">What should the phone say?</label>
     <textarea id="box">${esc(draft)}</textarea>
+    <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Soft</span><input id="mood" type="range" min="0" max="100" value="${moodSafe}" aria-label="Mood, from soft to harsh" style="flex:1;accent-color:#0e6b62"><span class="muted">Harsh</span></div>
+    <p class="muted" id="mood-word">${word}</p>
+    <p style="margin:.4rem 0 .2rem;font-weight:600">Play voices</p>
+    <div class="chips">${chips}</div>
     <div class="grid"><button class="wide teal" id="do-say" type="button">Say it</button><button class="wide ink" id="do-text" type="button">Text it</button></div>
-    <button class="wide ghost" id="do-wa" type="button" style="margin-top:.5rem">Send in WhatsApp</button>
-    <div class="chips" style="margin-top:.8rem">${["I","need","please","help","water","pain","yes","no"].map(w => `<button class="chip" data-word="${w}" type="button">${w}</button>`).join("")}</div>`;
+    ${options}`;
 }
 function call(){
-  const women = voices();
   return `<div class="card"><h2 style="margin:.1rem 0 .4rem">So the other person can hear her</h2>
     <p>Tap Phone call at the top. On the call screen, tap Speaker, turn the volume up, and hold the phone a little away. She is heard through the microphone.</p></div>
     <button class="wide teal" data-speak="Can you hear me? I am using SteadyVoice because I cannot speak." type="button">Test: Can you hear me?</button>
-    <button class="wide ghost" id="lead" type="button" style="margin-top:.5rem">${state.settings.leadIn ? "On: starts with Please listen" : "Off: phrase only"}</button>
-    <p class="kicker" style="margin:1rem 0 .4rem">Woman's voice${women[0] ? " · " + esc(women[0].name) : ""}</p>
-    <div class="voices">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b><br><span style="font-size:.75rem">${p.hint}</span></button>`).join("")}</div>
-    <div class="grid" style="margin-top:.7rem">${phrases().slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>`;
+    <div class="grid" style="margin-top:.7rem">${phrases().slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>
+    ${fold("call", "Call options", `<button class="wide ghost" id="lead" type="button">${state.settings.leadIn ? "Starts with Please listen" : "Phrase only"}</button><div class="voices" style="margin-top:.5rem">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b></button>`).join("")}</div>`)}`;
 }
 function more(){
   const women = voices();
-  return `<label>Her name<input id="name" value="${esc(state.settings.name||"")}" placeholder="First name"></label>
-    <div class="card"><b>Women's voices</b><p>Clara, Helen, June, Mae, and Nora use the best woman's voice on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No woman's voice yet. In the phone settings, download an English woman's text-to-speech voice, then reopen this page."}</p>
+  return `<div class="card"><b>Women's voices</b><p>Clara, Helen, June, Mae, and Nora use the best woman's voice on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No woman's voice yet. In the phone settings, download an English woman's text-to-speech voice, then reopen this page."}</p>
     <div class="voices">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div></div>
     <div class="card"><b>Text a phrase</b><p>Text opens the phone's own Messages app with the words filled in. She taps Send. WhatsApp does the same if it is installed. A new messaging app is not required.</p>
     <button class="wide ink" data-speak="" data-text="I had a stroke. I can hear you. I cannot speak. Please read this text." type="button">Text: I cannot speak</button></div>
     <div class="card"><b>Put it on the phone</b><p>An iPhone cannot install a random downloaded app. The simple way is Add to Home Screen from Chrome or Safari. Or send this one file, save it in Downloads, and open it with Chrome. Do not open it from inside a zip.</p></div>
     <button class="wide ink" id="unlock" type="button">Arrange the board</button>
-    <p class="muted">Arrange is locked until you tap that. Done locks it again. Nothing is uploaded.</p>`;
+    <p class="muted">Arrange is locked until you tap that. Done locks it again. Nothing is uploaded.</p>
+    ${fold("more", "More options", `<label>Her name<input id="name" value="${esc(state.settings.name||"")}" placeholder="First name"></label>`)}`;
 }
 view.addEventListener("click", (event) => {
   const t = event.target.closest("button");
   if (!t) return;
+  if (t.dataset.fold){ folds[t.dataset.fold] = !folds[t.dataset.fold]; render(); return; }
+  if (t.dataset.comedy !== undefined){
+    state.settings.comedyId = t.dataset.comedy;
+    save();
+    if (t.dataset.comedy && !liveCall()){
+      const picked = COMEDY.find(item => item.id === t.dataset.comedy);
+      say("Hello. This is the " + (picked ? picked.name : "play") + " voice.");
+    } else render();
+    return;
+  }
+  if (t.id === "reset-voice"){ state.settings.comedyId = ""; state.settings.mood = 50; save(); render(); return; }
   if (t.id === "unlock"){ arranging = true; tab = "board"; render(); return; }
   if (t.id === "done"){ arranging = false; render(); return; }
   if (t.id === "theme"){ state.settings.theme = state.settings.theme === "night" ? "paper" : "night"; save(); render(); return; }
@@ -338,6 +378,13 @@ view.addEventListener("click", (event) => {
 view.addEventListener("input", (event) => {
   if (event.target.id === "q"){ query = event.target.value; const pos = event.target.selectionStart; render(); const q = $("#q"); if (q){ q.focus(); q.selectionStart = q.selectionEnd = pos; } }
   if (event.target.id === "box") draft = event.target.value;
+  if (event.target.id === "mood"){
+    state.settings.mood = Number(event.target.value);
+    const word = state.settings.mood < 35 ? "Soft" : state.settings.mood > 65 ? "Harsh" : "Natural";
+    const label = $("#mood-word");
+    if (label) label.textContent = word;
+    save();
+  }
   if (event.target.id === "name"){ state.settings.name = event.target.value; save(); }
 });
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.tab; notice = ""; render(); });
