@@ -1,31 +1,53 @@
-## Open it on an Android phone (no website)
+## SteadyVoice
 
-Chrome on a phone will not load a separate script next to an HTML file. That is why the old page was white.
+Tap a button. The phone speaks.
 
-Send **SteadyVoice.html** only. It is the whole app in one file.
+## On a phone call
 
-1. Copy `SteadyVoice.html` onto the phone (Drive, email, or a cable). Put it in **Download**.
-2. Open the Download folder, tap the file, and choose **Chrome**.
-3. The board should show immediately. Tap a button and the phone speaks.
+iPhone and Android will not let any app speak directly into a regular phone call. They block it.
 
-`index.html` is the same single file, if that is the name already on the phone. Replace the old copy. Do not open it from inside a zip.
+What works:
 
-Phrases are saved in that browser. If they disappear after a reinstall, use More, then Backup, and keep the file.
+1. Start the call.
+2. Tap Speaker. Turn the volume all the way up.
+3. Open SteadyVoice and tap Call mode.
+4. Tap a button. Hold the phone a little away, speaker facing up.
 
-## Home screen (optional, needs the site)
+The voice comes out of the speaker. The microphone hears it. The other person hears her.
 
-1. Open https://treyu2023.github.io/steadyvoice/ in **Chrome** (not Facebook or Instagram).
-2. Tap the three-dot menu.
-3. Tap **Install app** or **Add to Home screen**.
-4. Open **SteadyVoice** from the home screen. After that it works offline.
+Call mode can start with “Please listen” so the first words are not cut off.
 
-## First things to try
+## Women’s voices
 
-- **Board** — large buttons. Tap one and the phone speaks.
-- **Speak** — type a sentence, then Say it. Enter also speaks.
-- **Phrases** — search, sort by most used, recent, A–Z, or group. Save any line to the board.
-- **More** — yes/no page, pain scale, colors, type size, stronger side, voice speed, backup.
+Open More. Choose Clara, Helen, June, Mae, or Nora. They are different speeds and tones, using the best woman’s voice already on the phone.
 
-Stronger side puts Yes toward the hand that is easier. Clear voice speed is a good start. Lock editing once the board is set so buttons are not changed by accident.
+If the voice sounds like a man, install a woman’s voice:
 
-A backup file from More, then Backup, can move her phrases to another phone. Nothing is uploaded. Phrases, history, and voice clips stay on the phone.
+- Android: Settings, search Text-to-speech, download English (United States) and English (United Kingdom).
+- iPhone: Settings, Accessibility, Spoken Content, Voices, English.
+
+## Texting
+
+Open Type, write a sentence, then Text it. That opens the phone’s own Messages app with the words filled in. She taps Send.
+
+WhatsApp works the same way if it is installed. A separate messaging app is not required.
+
+## Put it on her phone
+
+Open https://treyu2023.github.io/steadyvoice/ in Chrome or Safari.
+
+Tap the menu. Tap Install app or Add to Home screen.
+
+That is the one tap. After the first open it works offline.
+
+An iPhone cannot install a random downloaded app. Apple only allows that from the App Store.
+
+## One file, if a website is hard
+
+Send **SteadyVoice.html** only. It is the whole app.
+
+1. Text or email the file. Save it in Download.
+2. Open the Download folder, tap the file, and choose Chrome.
+3. Do not open it from inside a zip.
+
+Nothing is uploaded. Phrases stay on the phone.
