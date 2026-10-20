@@ -1,14 +1,15 @@
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$page = Join-Path $here "SteadyVoice.html"
+$page = Join-Path $here "SpeakWell.html"
+if (-not (Test-Path -LiteralPath $page)) { $page = Join-Path $here "SteadyVoice.html" }
 
 function Show-Problem($message) {
   Add-Type -AssemblyName System.Windows.Forms
-  [System.Windows.Forms.MessageBox]::Show($message, "SteadyVoice") | Out-Null
+  [System.Windows.Forms.MessageBox]::Show($message, "Speak Well") | Out-Null
 }
 
 if (-not (Test-Path -LiteralPath $page)) {
-  Show-Problem "SteadyVoice.html is not in this folder.`r`n`r`nUnzip the whole zip. Do not move this starter by itself."
+  Show-Problem "SpeakWell.html is not in this folder.`r`n`r`nUnzip the whole zip. Do not move this starter by itself."
   exit 1
 }
 
@@ -43,7 +44,7 @@ function Find-Browser {
 
 $browser = Find-Browser
 if (-not $browser) {
-  Show-Problem "SteadyVoice could not find Chrome or Edge.`r`n`r`nAsk someone to install Google Chrome. Then double-click Start-SteadyVoice again."
+  Show-Problem "Speak Well could not find Chrome or Edge.`r`n`r`nAsk someone to install Google Chrome. Then double-click Start-SpeakWell again."
   exit 1
 }
 
@@ -53,7 +54,7 @@ $url = $url -replace " ", "%20"
 try {
   Start-Process -FilePath $browser -ArgumentList @("--app=$url", "--start-maximized")
 } catch {
-  Show-Problem "SteadyVoice found a browser but it did not open. Ask someone for help."
+  Show-Problem "Speak Well found a browser but it did not open. Ask someone for help."
   exit 1
 }
 exit 0

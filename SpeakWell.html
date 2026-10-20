@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3eee6">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Speak Well</title>
+<style>
+  :root { color-scheme: light; --paper:#f3eee6; --ink:#1c1916; --card:#fffdf9; --line:#e4d9cc; --muted:#6d645b; --teal:#0e6b62; --soft:#e5f3f1; --rose:#8e2f2f; --rose-soft:#f8e8e4; --on:#f3fffc; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Segoe UI", "Helvetica Neue", sans-serif; }
+  body { max-width: 32rem; margin: 0 auto; min-height: 100dvh; padding: max(1rem, env(safe-area-inset-top)) 1rem 8.5rem; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 0; }
+  h1 { font-size: 1.6rem; margin: 0; }
+  .kicker { margin: 0; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); font-weight: 700; }
+  .row { display: flex; justify-content: space-between; align-items: flex-end; gap: .75rem; }
+  .tabs, .grid, .dock, .voices { display: grid; gap: .5rem; }
+  .tabs { grid-template-columns: repeat(4, 1fr); margin: .75rem 0; }
+  .grid, .voices { grid-template-columns: 1fr 1fr; }
+  .dock { grid-template-columns: repeat(4, 1fr); }
+  button, .card { border-radius: 1rem; }
+  .tab, .ghost, .voice, .pad, .dock button, .wide { min-height: 2.75rem; }
+  .tab { background: var(--card); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); font-weight: 650; }
+  .tab.on, .voice.on { background: var(--ink); color: var(--paper); box-shadow: none; }
+  .callbtn { border-radius: 999px; min-height: 3rem; padding: 0 1rem; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); font-weight: 700; }
+  .callbtn.on { background: var(--teal); color: var(--on); box-shadow: none; }
+  .pad { min-height: 5rem; padding: .75rem; text-align: left; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  .pad b { display: block; font-size: 1.05rem; }
+  .pad span, .muted, .card p { color: var(--muted); }
+  .pad.urgent { background: var(--rose); color: #fff8f6; box-shadow: none; }
+  .pad.urgent span { color: #f8e8e4; }
+  .pad.need { background: var(--soft); }
+  .lead, .card { font-size: .95rem; line-height: 1.45; }
+  .card { background: var(--card); padding: 1rem; box-shadow: inset 0 0 0 1px var(--line); margin-bottom: .75rem; }
+  .wide { width: 100%; font-weight: 700; }
+  .teal { background: var(--teal); color: var(--on); }
+  .ink { background: var(--ink); color: var(--paper); }
+  .rose { background: var(--rose); color: #fff8f6; }
+  .ghost { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+  input, textarea { width: 100%; border: 0; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); border-radius: .9rem; padding: .75rem; margin-bottom: .5rem; }
+  textarea { min-height: 6rem; }
+  .chips { display: flex; gap: .4rem; overflow: auto; margin-bottom: .6rem; }
+  .chip { border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); padding: .45rem .75rem; white-space: nowrap; }
+  .chip.on { background: var(--teal); color: var(--on); box-shadow: none; }
+  .note { background: var(--soft); border-radius: .9rem; padding: .7rem .8rem; margin-bottom: .6rem; }
+  .speak { background: var(--ink); color: var(--paper); border-radius: .9rem; padding: .7rem .8rem; margin-bottom: .6rem; }
+  footer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); padding: .5rem 1rem max(.6rem, env(safe-area-inset-bottom)); }
+  footer .wrap { max-width: 32rem; margin: 0 auto; display: grid; gap: .4rem; }
+  .hide { display: none; }
+  ol { margin: .4rem 0 0; padding-left: 1.1rem; }
+  html[data-theme="night"] { --paper:#141311; --ink:#f4efe8; --card:#241f1b; --line:#3c342c; --muted:#b7ab9e; --teal:#3dbaad; --soft:#1a3330; --rose:#e08a82; --rose-soft:#3a2422; --on:#06221f; }
+  .tools { display:flex; flex-wrap:wrap; gap:.4rem; margin:.4rem 0 .6rem; }
+  #sound { margin: 0 0 .7rem; }
+  #sound .pick { min-height: 3.4rem; text-align: left; }
+  #sound .pick.on-speaker { background: var(--teal); color: var(--on); border-color: transparent; }
+  #sound .pick.on-call { background: var(--rose); color: var(--on); border-color: transparent; }
+  #sound .sub { display: block; font-size: .75rem; font-weight: 500; opacity: .85; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div>
+      <button id="home" class="ghost" type="button" style="display:none;margin-bottom:.4rem">Home</button>
+      <p class="kicker">Speak Well</p>
+      <h1 id="title">Home</h1>
+    </div>
+  </div>
+  <div id="sound"></div>
+  <nav class="tabs" aria-label="Sections" style="display:none">
+    <button class="tab on" data-tab="board" type="button">Board</button>
+    <button class="tab" data-tab="say" type="button">Speak</button>
+    <button class="tab" data-tab="call" type="button">Call</button>
+    <button class="tab" data-tab="more" type="button">More</button>
+  </nav>
+  <div id="live" class="hide" aria-live="polite"></div>
+  <section id="view"></section>
+  <footer>
+    <div class="wrap">
+      <div class="dock">
+        <button class="ghost" data-say="Yes." type="button">Yes</button>
+        <button class="rose" data-say="No." type="button">No</button>
+        <button class="teal" data-say="Please wait. I need a moment." type="button">Wait</button>
+        <button class="rose" data-say="I need help." type="button">Help</button>
+      </div>
+      <div class="dock" style="grid-template-columns:1fr 1fr">
+        <button id="stop" class="ghost" type="button">Stop</button>
+        <button id="again" class="ghost" type="button">Say last again</button>
+      </div>
+    </div>
+  </footer>
+<script>
+const PHRASES = [
+  ["help","Help","I need help.","Urgent","urgent"],
+  ["cant","I can't speak","I had a stroke. I can hear you. I cannot speak right now. Please listen to this voice.","Urgent","urgent"],
+  ["emergency","Emergency","This is an emergency. I need medical help.","Urgent","urgent"],
+  ["911","Call 911","Please call 911.","Urgent","urgent"],
+  ["breathe","Hard to breathe","It is hard to breathe.","Urgent","urgent"],
+  ["stop","Stop","Please stop.","Urgent","urgent"],
+  ["yes","Yes","Yes.","Talk","talk"],
+  ["no","No","No.","Talk","talk"],
+  ["wait","Wait","Please wait. I need a moment.","Talk","talk"],
+  ["again","Say it again","Please say that again, more slowly.","Talk","talk"],
+  ["understand","I don't understand","I do not understand. Please say it a different way.","Talk","talk"],
+  ["hear","I can hear you","I can hear you. I just cannot speak.","Talk","talk"],
+  ["water","Water","I need water.","Needs","need"],
+  ["bathroom","Bathroom","I need the bathroom.","Needs","need"],
+  ["pain","Pain","I am in pain.","Needs","urgent"],
+  ["medicine","Medicine","I need my medicine.","Needs","need"],
+  ["hungry","Hungry","I am hungry.","Needs","need"],
+  ["cold","I'm cold","I am cold.","Needs","need"],
+  ["tired","I'm tired","I am tired.","Feelings","talk"],
+  ["scared","I'm scared","I am scared.","Feelings","urgent"],
+  ["okay","I'm okay","I am okay.","Feelings","talk"],
+  ["love","I love you","I love you.","Feelings","talk"],
+  ["thanks","Thank you","Thank you.","Feelings","talk"],
+  ["nurse","Nurse","I need the nurse.","People","need"],
+  ["doctor","Doctor","I need the doctor.","People","need"],
+  ["family","My family","Please call my family.","People","need"],
+  ["dizzy","Dizzy","I feel dizzy.","Care","urgent"],
+  ["head","Headache","I have a headache.","Care","need"]
+].map(([id,label,speak,group,tone]) => ({id,label,speak,group,tone}));
+const PRESETS = [
+  {id:"clara", name:"Clara", hint:"Clear and steady", rate:0.86, pitch:1.05, kind:"woman"},
+  {id:"helen", name:"Helen", hint:"Warm and lower", rate:0.8, pitch:0.92, kind:"woman"},
+  {id:"june", name:"June", hint:"Brighter", rate:0.92, pitch:1.16, kind:"woman"},
+  {id:"mae", name:"Mae", hint:"Soft", rate:0.76, pitch:1, kind:"woman"},
+  {id:"nora", name:"Nora", hint:"Slow, for calls", rate:0.68, pitch:1.02, kind:"woman"},
+  {id:"owen", name:"Owen", hint:"Steady man", rate:0.84, pitch:0.72, kind:"man"},
+  {id:"caleb", name:"Caleb", hint:"Warm and low", rate:0.76, pitch:0.58, kind:"man"},
+  {id:"miles", name:"Miles", hint:"Clear and lighter", rate:0.9, pitch:0.86, kind:"man"},
+  {id:"arthur", name:"Arthur", hint:"Slow, for calls", rate:0.64, pitch:0.66, kind:"man"}
+];
+const FEMALE = /female|woman|samantha|victoria|karen|moira|tessa|fiona|zira|hazel|jenny|aria|emma|libby|sonia|allison|ava|serena|kate|salli|joanna|ivy|melissa|amy|olivia|susan|nicky/i;
+const MALE = /\bmale\b|\bdavid\b|\bdaniel\b|\balex\b|\bfred\b|\bguy\b|\bgeorge\b|\bmatthew\b|\bjoey\b|\bjames\b|\bjorge\b|\bdiego\b|\bluca\b|\bpierre\b|\botoya\b|\bthomas\b/i;
+const KEY = "steadyvoice.call.v2";
+const $= (s,r=document) => r.querySelector(s);
+const view = $("#view");
+let tab = "menu", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false, guideOn = false, guideStep = 0;
+let state = load();
+function talkStamp(at){ return new Date(at).toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
+function ensureTalks(){
+  if (!Array.isArray(state.talks)) state.talks = [];
+  if (!state.talks.some(talk => talk && talk.id === state.currentId)){
+    const at = Date.now();
+    const fresh = {id:"talk-"+at, title:talkStamp(at), at:at, lines:[]};
+    state.talks.unshift(fresh);
+    state.currentId = fresh.id;
+  }
+}
+function rememberLine(line){
+  ensureTalks();
+  const now = Date.now();
+  let current = state.talks.find(talk => talk.id === state.currentId);
+  if (current && current.lines.length){
+    const start = new Date(current.at), today = new Date(now);
+    if (start.getFullYear() !== today.getFullYear() || start.getMonth() !== today.getMonth() || start.getDate() !== today.getDate()){
+      const fresh = {id:"talk-"+now, title:talkStamp(now), at:now, lines:[]};
+      state.talks.unshift(fresh);
+      state.currentId = fresh.id;
+      current = fresh;
+    }
+  }
+  current.lines = (current.lines || []).concat(line).slice(-80);
+  state.talks = state.talks.filter(talk => (talk.lines && talk.lines.length) || talk.id === state.currentId).slice(0, 40);
+}
+function replayTalk(id){
+  const talk = (state.talks || []).find(item => item.id === id);
+  if (!talk || !talk.lines.length || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const shaped = shape();
+  const list = voices();
+  const voice = list.find(item => item.voiceURI === state.settings.voiceURI) || list[0];
+  talk.lines.forEach(line => {
+    const utter = new SpeechSynthesisUtterance(line);
+    utter.rate = shaped.rate;
+    utter.pitch = shaped.pitch;
+    utter.volume = 1;
+    if (voice) utter.voice = voice;
+    speechSynthesis.speak(utter);
+  });
+}
+function saveTalk(){
+  ensureTalks();
+  const current = state.talks.find(talk => talk.id === state.currentId);
+  if (!current || !current.lines.length){ notice = "Nothing to save yet."; render(); return; }
+  const at = Date.now();
+  const fresh = {id:"talk-"+at, title:talkStamp(at), at:at, lines:[]};
+  state.currentId = fresh.id;
+  state.talks = [fresh].concat(state.talks.filter(talk => talk.lines && talk.lines.length)).slice(0, 40);
+  notice = "Saved. A new talk is ready.";
+  openTalk = "";
+  save();
+  render();
+}
+ensureTalks();
+if (!Array.isArray(state.learned)) state.learned = [];
+if (!state.settings.themeChosen){ state.settings.theme = "night"; state.settings.themeChosen = true; save(); }
+if (!state.settings.seenTutorial) guideOn = true;
+function learn(line){
+  const text = String(line || "").trim().slice(0, 180);
+  if (!text) return;
+  if (!Array.isArray(state.learned)) state.learned = [];
+  const index = state.learned.findIndex(item => item && item.text && item.text.toLowerCase() === text.toLowerCase());
+  if (index >= 0) state.learned[index].count = (state.learned[index].count || 0) + 1;
+  else state.learned.push({text: text, count: 1});
+  state.learned.sort((a, b) => (b.count || 0) - (a.count || 0));
+  state.learned = state.learned.slice(0, 80);
+}
+function suggestions(text){
+  const queryText = String(text || "").trim().toLowerCase();
+  if (!queryText) return [];
+  const risky = /911|emergency/i.test(text || "");
+  const source = (state.learned || []).filter(item => item && item.text && (risky || !/911|emergency/i.test(item.text)));
+  const starts = source.filter(item => item.text.toLowerCase().startsWith(queryText) && item.text.toLowerCase() !== queryText);
+  if (starts.length) return starts.slice(0, 5).map(item => item.text);
+  const token = queryText.split(/\s+/).pop() || "";
+  if (token.length < 2) return [];
+  const words = new Map();
+  source.forEach(item => item.text.split(/\s+/).forEach(word => {
+    const clean = word.replace(/[^a-zA-Z']/g, "");
+    const lower = clean.toLowerCase();
+    if (clean.length >= 2 && lower.startsWith(token) && lower !== token) words.set(clean, (words.get(clean) || 0) + (item.count || 1));
+  }));
+  return Array.from(words.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5).map(pair => pair[0]);
+}
+function typingPack(){
+  const from = state.settings.hintFrom || "both";
+  const risky = /911|emergency/i.test(draft);
+  const safe = (text) => risky || !/911|emergency/i.test(text);
+  const query = String(draft || "").trim().toLowerCase();
+  const token = query.split(/\s+/).pop() || "";
+  const said = (state.learned || []).filter(item => item && item.text && safe(item.text));
+  const board = phrases().filter(item => item.id !== "emergency" && item.id !== "911" && safe(item.speak));
+  const lines = [];
+  const seen = new Set();
+  const push = (text) => {
+    const key = String(text || "").trim().toLowerCase();
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    lines.push(String(text).trim());
+  };
+  if (from !== "board") said.forEach(item => push(item.text));
+  if (from !== "said") board.forEach(item => push(item.speak));
+  const mineHits = matchingFacts(query);
+  const phraseHits = mineHits.concat(query ? lines.filter(line => line.toLowerCase().includes(query) && line.toLowerCase() !== query) : lines).filter((line, index, all) => all.findIndex(item => item.toLowerCase() === line.toLowerCase()) === index).slice(0, 8);
+  const counts = new Map();
+  const labels = new Map();
+  const note = (word, count) => {
+    const clean = String(word || "").replace(/[^a-zA-Z']/g, "");
+    if (clean.length < 2) return;
+    const key = clean.toLowerCase();
+    counts.set(key, (counts.get(key) || 0) + count);
+    if (!labels.has(key)) labels.set(key, clean);
+  };
+  if (from !== "board") said.forEach(item => item.text.split(/\s+/).forEach(word => note(word, item.count || 1)));
+  if (from !== "said") board.forEach(item => item.speak.split(/\s+/).forEach(word => note(word, 1)));
+  ["I","need","want","please","help","water","pain","yes","no","wait","thank"].forEach(word => note(word, 0));
+  const wordHits = Array.from(labels.entries()).filter(pair => !token || (pair[0].startsWith(token) && pair[0] !== token)).sort((a, b) => (counts.get(b[0]) || 0) - (counts.get(a[0]) || 0)).slice(0, 8).map(pair => pair[1]);
+  return { words: wordHits, phrases: phraseHits };
+}
+function hintRow(items, kind){
+  return `<div class="chips" id="${kind}-line" style="flex-wrap:nowrap;overflow-x:auto">${items.map(item => `<button class="chip" data-suggest="${esc(item)}" data-kind="${kind}" type="button">${esc(item)}</button>`).join("")}</div>`;
+}
+function load(){
+  const blank = {custom:[], hidden:[], uses:{}, history:[], order:[], talks:[], currentId:"", learned:[], settings:{presetId:"nora", voiceURI:"", callMode:false, leadIn:true, name:"", theme:"night", sort:"used", columns:2, showChips:true, showDock:true, output:"auto", mood:50, comedyId:"", themeChosen:false, seenTutorial:false}};
+  try { return Object.assign(blank, JSON.parse(localStorage.getItem(KEY)||"null")||{}, {settings:Object.assign(blank.settings,(JSON.parse(localStorage.getItem(KEY)||"{}").settings)||{})}); }
+  catch { return blank; }
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }
+let noteGen = 0, noteReading = false, noteMark = 0;
+function book(){
+  const fresh = [
+    {id:"1", title:"Slot 1", body:"", place:0},
+    {id:"2", title:"Slot 2", body:"", place:0},
+    {id:"3", title:"Slot 3", body:"", place:0}
+  ];
+  const old = state.notes && Array.isArray(state.notes.slots) ? state.notes.slots : [];
+  if (!state.notes || old.length < 3){
+    state.notes = { active: state.notes && (state.notes.active === "2" || state.notes.active === "3") ? state.notes.active : "1", slots: fresh.map(slot => {
+      const found = old.find(item => item && item.id === slot.id);
+      if (!found) return slot;
+      return { id: slot.id, title: String(found.title || slot.title).slice(0, 40), body: String(found.body || "").slice(0, 8000), place: Math.max(0, Math.floor(Number(found.place) || 0)) };
+    }) };
+  }
+  return state.notes;
+}
+function noteNow(){ const notes = book(); return notes.slots.find(slot => slot.id === notes.active) || notes.slots[0]; }
+function scriptLines(body){ return String(body || "").split(/\n+|(?<=[.!?])\s+/).map(line => line.trim()).filter(Boolean).slice(0, 80); }
+function speakChunk(text, onMark){
+  return new Promise(async (resolve) => {
+    const lang = state.settings.outputLang || "en";
+    let spoken = text;
+    if (lang !== "en") spoken = (await translateLine(text, lang)).text;
+    if (!window.speechSynthesis) return resolve(false);
+    speechSynthesis.cancel();
+    const shaped = shape();
+    const voice = pickLangVoice(lang);
+    const utter = new SpeechSynthesisUtterance(spoken);
+    utter.lang = BCP[lang] || "en-US";
+    utter.rate = liveCall() ? Math.min(shaped.rate, 0.8) : shaped.rate;
+    utter.pitch = shaped.pitch;
+    utter.volume = 1;
+    if (voice) utter.voice = voice;
+    utter.onboundary = (event) => { if (onMark) onMark(event.charIndex || 0); };
+    utter.onend = () => resolve(true);
+    utter.onerror = () => resolve(false);
+    setTimeout(() => { speechSynthesis.resume(); speechSynthesis.speak(utter); }, 40);
+  });
+}
+function pauseNote(){ noteGen += 1; noteReading = false; if (window.speechSynthesis) speechSynthesis.cancel(); speaking = ""; }
+async function readNote(from){
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  if (!lines.length){ notice = "This note is empty."; render(); return; }
+  const mine = ++noteGen;
+  let index = from == null ? slot.place || 0 : from;
+  if (index < 0 || index >= lines.length) index = 0;
+  noteReading = true;
+  applyRoute();
+  for (let i = index; i < lines.length; i += 1){
+    if (mine !== noteGen){ noteReading = false; return; }
+    slot.place = i;
+    noteMark = 0;
+    save();
+    const here = document.getElementById("note-here");
+    if (here || document.getElementById("note-go")) paintNote();
+    else render();
+    const ok = await speakChunk(lines[i], (at) => {
+      if (mine !== noteGen) return;
+      noteMark = at;
+      const live = document.getElementById("note-here");
+      if (live) live.textContent = lines[i].slice(0, at) + " | " + lines[i].slice(at);
+    });
+    if (!ok || mine !== noteGen){ noteReading = false; if (mine === noteGen) speaking = ""; save(); if (document.getElementById("note-go")) paintNote(); return; }
+  }
+  slot.place = lines.length;
+  noteReading = false;
+  speaking = "";
+  notice = "That note is finished.";
+  save();
+  render();
+}
+function paintNote(){
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  const at = Math.min(slot.place || 0, lines.length);
+  const button = document.getElementById("note-go");
+  if (button) button.textContent = noteReading ? "Pause · line " + (at + 1) + " of " + lines.length : !lines.length ? "Nothing to say yet" : at >= lines.length ? "Speak from the start" : at === 0 ? "Speak this note" : "Continue · line " + (at + 1) + " of " + lines.length;
+  const here = document.getElementById("note-here");
+  const line = lines[at] || "";
+  if (here) here.textContent = noteReading ? line.slice(0, noteMark) + " | " + line.slice(noteMark) : line;
+  const box = document.getElementById("note-lines");
+  if (box) box.innerHTML = lines.map((item, index) => `<button class="wide ${index === at && at < lines.length ? "ink" : "ghost"}" data-jump="${index}" type="button" style="margin-top:.35rem"><b>${index === at && at < lines.length ? "Here" : index + 1}</b> ${esc(item)}</button>`).join("");
+}
+function notepad(){
+  const notes = book();
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  const at = Math.min(slot.place || 0, lines.length);
+  const label = noteReading ? "Pause · line " + (Math.min(at, lines.length - 1) + 1) + " of " + lines.length : !lines.length ? "Nothing to say yet" : at >= lines.length ? "Speak from the start" : at === 0 ? "Speak this note" : "Continue · line " + (at + 1) + " of " + lines.length;
+  const picks = notes.slots.map(item => `<button class="${item.id === notes.active ? "ink" : "ghost"}" data-slot="${item.id}" type="button">${esc(item.title || "Slot")}</button>`).join("");
+  const list = lines.map((item, index) => `<button class="wide ${index === at && at < lines.length ? "ink" : "ghost"}" data-jump="${index}" type="button" style="margin-top:.35rem"><b>${index === at && at < lines.length ? "Here" : index + 1}</b> ${esc(item)}</button>`).join("");
+  return `<p class="muted">Write the conversation first. The phone says it one line at a time. Pause, use another button, then continue on the same line. All three slots stay on this phone.</p>
+    <div class="grid" style="margin:.5rem 0;grid-template-columns:1fr 1fr 1fr">${picks}</div>
+    <label for="note-title">Name</label>
+    <input id="note-title" value="${esc(slot.title)}">
+    <label for="note-body">The words</label>
+    <textarea id="note-body" rows="8" placeholder="One sentence on each line works best." style="min-height:12rem">${esc(slot.body)}</textarea>
+    <button class="wide teal" id="note-go" type="button">${label}</button>
+    <p id="note-here" class="muted">${esc(lines[at] || "")}</p>
+    ${at > 0 ? `<button class="wide ghost" id="note-restart" type="button">Start over</button>` : ""}
+    <div id="note-lines">${list}</div>`;
+}
+function liveCall(){
+  const output = state.settings.output || "auto";
+  return output === "call" || (output === "auto" && detectedCall);
+}
+let screenLock = null;
+async function applyRoute(){
+  const on = liveCall();
+  state.settings.callMode = on;
+  try { if (navigator.audioSession) navigator.audioSession.type = on ? "play-and-record" : "playback"; } catch {}
+  try { if (screenLock) await screenLock.release(); } catch {}
+  screenLock = null;
+  if (!on || document.visibilityState === "hidden" || !navigator.wakeLock) return;
+  try {
+    screenLock = await navigator.wakeLock.request("screen");
+    screenLock.addEventListener("release", () => {
+      screenLock = null;
+      if (liveCall() && document.visibilityState === "visible") applyRoute();
+    });
+  } catch {}
+}
+function resumeVoice(){
+  try { if (window.speechSynthesis) speechSynthesis.resume(); } catch {}
+}
+function renderSound(){
+  const box = $("#sound");
+  if (!box) return;
+  const onCall = liveCall();
+  const output = state.settings.output || "auto";
+  const extra = soundOpen ? `<div class="card">
+      <button class="wide ${output==="auto"?"ink":"ghost"}" data-out="auto" type="button">${output==="auto"?"Auto is on":"Auto is off"} — follow a phone call</button>
+      <button class="wide ghost" id="sound-lead" type="button" style="margin-top:.4rem">${state.settings.leadIn ? "On a call, starts with Please listen" : "On a call, phrase only"}</button>
+      <button class="wide teal" id="sound-test" type="button" style="margin-top:.4rem">Test this sound</button>
+      <p class="muted">On the phone’s call screen, tap Speaker and turn the volume up. A computer uses its current speaker.</p>
+    </div>` : "";
+  const hint = output === "auto" && detectedCall ? `<p class="muted">A call took the sound. Tap Speaker to override.</p>` : "";
+  box.innerHTML = `<div class="grid">
+      <button class="pick ${onCall ? "" : "on-speaker"}" data-out="speaker" type="button">Speaker<span class="sub">${output==="auto" && !onCall ? "Auto · out loud" : "Out loud"}</span></button>
+      <button class="pick ${onCall ? "on-call" : ""}" data-out="call" type="button">Phone call<span class="sub">${output==="auto" && onCall ? "Auto · on the line" : "On the line"}</span></button>
+    </div>${hint}
+    <button class="wide ghost" id="sound-more" type="button" style="margin-top:.35rem">${soundOpen ? "Hide sound options" : "Sound options"}</button>${extra}`;
+}
+function phrases(){ return PHRASES.concat(state.custom||[]); }
+function preset(){ return PRESETS.find(p => p.id === state.settings.presetId) || PRESETS[4]; }
+const COMEDY = [
+  {id:"sweet", name:"Sweet", rate:0.84, pitch:1.22},
+  {id:"giggle", name:"Giggle", rate:1.05, pitch:1.38},
+  {id:"drama", name:"Drama", rate:0.68, pitch:0.82},
+  {id:"grumpy", name:"Grumpy", rate:0.96, pitch:0.7}
+];
+let folds = {};
+function shape(){
+  const comedy = COMEDY.find(item => item.id === state.settings.comedyId);
+  const base = comedy || preset();
+  const mood = Math.min(100, Math.max(0, Number(state.settings.mood)));
+  const safe = Number.isFinite(mood) ? mood : 50;
+  const speed = Math.min(1.35, Math.max(0.7, Number(state.settings.speed) || 1));
+  const lift = Math.min(1.55, Math.max(0.55, Number(state.settings.pitch) || 1));
+  return {
+    rate: Math.min(1.5, Math.max(0.45, base.rate * speed * (1 + (safe - 50) / 280))),
+    pitch: Math.min(2, Math.max(0.4, base.pitch * lift * (1 + (50 - safe) / 180)))
+  };
+}
+function fold(id, label, inner){
+  const open = !!folds[id];
+  return `<button class="wide ghost" data-fold="${id}" type="button" style="margin-top:.7rem">${open ? "Hide " + label : label}</button>` + (open ? `<div class="card">${inner}</div>` : "");
+}
+function voices(){
+  const all = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  const en = all.filter(v => v.lang.toLowerCase().startsWith("en"));
+  const pool = en.length ? en : all;
+  const women = pool.filter(v => FEMALE.test(v.name) && !MALE.test(v.name));
+  return women.length ? women : pool.filter(v => !MALE.test(v.name));
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    if (c === "&") return "&" + "amp;";
+    if (c === "<") return "&" + "lt;";
+    if (c === ">") return "&" + "gt;";
+    if (c === "\"") return "&" + "quot;";
+    return "&" + "#39;";
+  });
+}
+
+const LINES = {
+  "please listen.": { es: "Por favor, escucha.", it: "Per favore, ascolta.", fr: "Écoutez, s'il vous plaît.", zh: "请听。", ja: "聞いてください。" },
+  "i need help.": { es: "Necesito ayuda.", it: "Ho bisogno di aiuto.", fr: "J'ai besoin d'aide.", zh: "我需要帮助。", ja: "助けてください。" },
+  "i had a stroke. i can hear you. i cannot speak right now. please listen to this voice.": { es: "Tuve un derrame cerebral. Puedo oírte. No puedo hablar ahora. Por favor, escucha esta voz.", it: "Ho avuto un ictus. Ti sento. Non posso parlare adesso. Per favore, ascolta questa voce.", fr: "J'ai fait un AVC. Je vous entends. Je ne peux pas parler maintenant. Écoutez cette voix, s'il vous plaît.", zh: "我中风了。我听得见。我现在不能说话。请听这个声音。", ja: "私は脳卒中になりました。聞こえています。今は話せません。この声を聞いてください。" },
+  "this is an emergency. i need medical help.": { es: "Esto es una emergencia. Necesito ayuda médica.", it: "È un'emergenza. Ho bisogno di aiuto medico.", fr: "C'est une urgence. J'ai besoin d'une aide médicale.", zh: "这是紧急情况。我需要医疗帮助。", ja: "緊急です。医療の助けが必要です。" },
+  "please call 911.": { es: "Por favor, llama al 911.", it: "Per favore, chiama il 911.", fr: "Appelez le 911, s'il vous plaît.", zh: "请打911。", ja: "911に電話してください。" },
+  "it is hard to breathe.": { es: "Me cuesta respirar.", it: "Faccio fatica a respirare.", fr: "J'ai du mal à respirer.", zh: "我呼吸困难。", ja: "息が苦しいです。" },
+  "please stop.": { es: "Por favor, para.", it: "Per favore, fermati.", fr: "Arrêtez, s'il vous plaît.", zh: "请停一下。", ja: "やめてください。" },
+  "yes.": { es: "Sí.", it: "Sì.", fr: "Oui.", zh: "是的。", ja: "はい。" },
+  "no.": { es: "No.", it: "No.", fr: "Non.", zh: "不是。", ja: "いいえ。" },
+  "please wait. i need a moment.": { es: "Por favor, espera. Necesito un momento.", it: "Per favore, aspetta. Ho bisogno di un momento.", fr: "Attendez, s'il vous plaît. J'ai besoin d'un moment.", zh: "请等一下。我需要一点时间。", ja: "待ってください。少し時間が必要です。" },
+  "please say that again, more slowly.": { es: "Por favor, repítelo más despacio.", it: "Per favore, ripetilo più lentamente.", fr: "Répétez plus lentement, s'il vous plaît.", zh: "请再说一遍，慢一点。", ja: "もっとゆっくり、もう一度言ってください。" },
+  "i do not understand. please say it a different way.": { es: "No entiendo. Por favor, dilo de otra manera.", it: "Non capisco. Per favore, dillo in un altro modo.", fr: "Je ne comprends pas. Dites-le autrement, s'il vous plaît.", zh: "我不明白。请换一种说法。", ja: "わかりません。別の言い方で言ってください。" },
+  "that is not what i mean.": { es: "Eso no es lo que quiero decir.", it: "Non è questo che intendo.", fr: "Ce n'est pas ce que je veux dire.", zh: "我不是这个意思。", ja: "そういう意味ではありません。" },
+  "i can hear you. i just cannot speak.": { es: "Puedo oírte. Solo que no puedo hablar.", it: "Ti sento. Solo che non posso parlare.", fr: "Je vous entends. Je ne peux seulement pas parler.", zh: "我听得见。我只是不能说话。", ja: "聞こえています。話せないだけです。" },
+  "please listen. this phone is speaking for me.": { es: "Por favor, escucha. Este teléfono habla por mí.", it: "Per favore, ascolta. Questo telefono parla per me.", fr: "Écoutez, s'il vous plaît. Ce téléphone parle pour moi.", zh: "请听。这部手机在替我说话。", ja: "聞いてください。この電話が私の代わりに話しています。" },
+  "please speak louder.": { es: "Por favor, habla más alto.", it: "Per favore, parla più forte.", fr: "Parlez plus fort, s'il vous plaît.", zh: "请说大声一点。", ja: "もっと大きな声で話してください。" },
+  "please speak more slowly.": { es: "Por favor, habla más despacio.", it: "Per favore, parla più lentamente.", fr: "Parlez plus lentement, s'il vous plaît.", zh: "请说慢一点。", ja: "もっとゆっくり話してください。" },
+  "goodbye. thank you for calling.": { es: "Adiós. Gracias por llamar.", it: "Arrivederci. Grazie per aver chiamato.", fr: "Au revoir. Merci d'avoir appelé.", zh: "再见。谢谢你打来。", ja: "さようなら。電話してくれてありがとう。" },
+  "i need water.": { es: "Necesito agua.", it: "Ho bisogno di acqua.", fr: "J'ai besoin d'eau.", zh: "我需要水。", ja: "水が必要です。" },
+  "i need the bathroom.": { es: "Necesito el baño.", it: "Ho bisogno del bagno.", fr: "J'ai besoin des toilettes.", zh: "我需要上厕所。", ja: "トイレに行きたいです。" },
+  "i am in pain.": { es: "Me duele.", it: "Ho dolore.", fr: "J'ai mal.", zh: "我疼。", ja: "痛いです。" },
+  "i need my medicine.": { es: "Necesito mi medicina.", it: "Ho bisogno della mia medicina.", fr: "J'ai besoin de mon médicament.", zh: "我需要吃药。", ja: "薬が必要です。" },
+  "i am hungry.": { es: "Tengo hambre.", it: "Ho fame.", fr: "J'ai faim.", zh: "我饿了。", ja: "お腹が空きました。" },
+  "i am thirsty.": { es: "Tengo sed.", it: "Ho sete.", fr: "J'ai soif.", zh: "我渴了。", ja: "のどが渇きました。" },
+  "i am cold.": { es: "Tengo frío.", it: "Ho freddo.", fr: "J'ai froid.", zh: "我冷。", ja: "寒いです。" },
+  "i am too warm.": { es: "Tengo calor.", it: "Ho troppo caldo.", fr: "J'ai trop chaud.", zh: "我太热了。", ja: "暑すぎます。" },
+  "please help me sit up.": { es: "Por favor, ayúdame a sentarme.", it: "Per favore, aiutami a sedermi.", fr: "Aidez-moi à m'asseoir, s'il vous plaît.", zh: "请帮我坐起来。", ja: "起き上がるのを手伝ってください。" },
+  "please help me lie down.": { es: "Por favor, ayúdame a acostarme.", it: "Per favore, aiutami a sdraiarmi.", fr: "Aidez-moi à m'allonger, s'il vous plaît.", zh: "请帮我躺下。", ja: "横になるのを手伝ってください。" },
+  "i need a blanket.": { es: "Necesito una manta.", it: "Ho bisogno di una coperta.", fr: "J'ai besoin d'une couverture.", zh: "我需要一条毯子。", ja: "毛布が必要です。" },
+  "i am tired.": { es: "Estoy cansada.", it: "Sono stanca.", fr: "Je suis fatiguée.", zh: "我累了。", ja: "疲れました。" },
+  "i am scared.": { es: "Tengo miedo.", it: "Ho paura.", fr: "J'ai peur.", zh: "我害怕。", ja: "怖いです。" },
+  "i am okay.": { es: "Estoy bien.", it: "Sto bene.", fr: "Je vais bien.", zh: "我没事。", ja: "大丈夫です。" },
+  "i love you.": { es: "Te quiero.", it: "Ti voglio bene.", fr: "Je vous aime.", zh: "我爱你。", ja: "愛しています。" },
+  "i am frustrated. please be patient with me.": { es: "Estoy frustrada. Por favor, ten paciencia conmigo.", it: "Sono frustrata. Per favore, abbi pazienza con me.", fr: "Je suis frustrée. Soyez patient avec moi, s'il vous plaît.", zh: "我很烦躁。请对我耐心一点。", ja: "イライラしています。どうか待ってください。" },
+  "thank you.": { es: "Gracias.", it: "Grazie.", fr: "Merci.", zh: "谢谢。", ja: "ありがとう。" },
+  "i need the nurse.": { es: "Necesito a la enfermera.", it: "Ho bisogno dell'infermiera.", fr: "J'ai besoin de l'infirmière.", zh: "我需要护士。", ja: "看護師が必要です。" },
+  "i need the doctor.": { es: "Necesito al médico.", it: "Ho bisogno del medico.", fr: "J'ai besoin du médecin.", zh: "我需要医生。", ja: "医者が必要です。" },
+  "please call my family.": { es: "Por favor, llama a mi familia.", it: "Per favore, chiama la mia famiglia.", fr: "Appelez ma famille, s'il vous plaît.", zh: "请给我的家人打电话。", ja: "家族に電話してください。" },
+  "i feel dizzy.": { es: "Me siento mareada.", it: "Mi sento stordita.", fr: "J'ai la tête qui tourne.", zh: "我头晕。", ja: "めまいがします。" },
+  "swallowing is hard.": { es: "Me cuesta tragar.", it: "Faccio fatica a deglutire.", fr: "J'ai du mal à avaler.", zh: "我吞咽困难。", ja: "飲み込むのがつらいです。" },
+  "i feel sick to my stomach.": { es: "Tengo náuseas.", it: "Ho la nausea.", fr: "J'ai mal au cœur.", zh: "我恶心。", ja: "吐き気がします。" },
+  "i have a headache.": { es: "Me duele la cabeza.", it: "Ho mal di testa.", fr: "J'ai mal à la tête.", zh: "我头疼。", ja: "頭が痛いです。" },
+  "i will point to where it hurts.": { es: "Señalaré dónde me duele.", it: "Indicherò dove mi fa male.", fr: "Je vais montrer où j'ai mal.", zh: "我会指出哪里疼。", ja: "痛いところを指さします。" },
+  "this is steadyvoice. can you hear me?": { es: "Soy Speak Well. ¿Me oyes?", it: "Sono Speak Well. Mi senti?", fr: "C'est Speak Well. Vous m'entendez ?", zh: "我是 Speak Well。你听得见吗？", ja: "Speak Wellです。聞こえますか？" },
+  "can you hear me? i am using steadyvoice because i cannot speak.": { es: "¿Me oyes? Uso Speak Well porque no puedo hablar.", it: "Mi senti? Uso Speak Well perché non posso parlare.", fr: "Vous m'entendez ? J'utilise Speak Well parce que je ne peux pas parler.", zh: "你听得见吗？我用 Speak Well，因为我不能说话。", ja: "聞こえますか？話せないので Speak Well を使っています。" },
+};
+const LANGS = [["en","English"],["es","Spanish"],["it","Italian"],["fr","French"],["zh","Chinese"],["ja","Japanese"]];
+const BCP = {en:"en-US", es:"es-ES", it:"it-IT", fr:"fr-FR", zh:"zh-CN", ja:"ja-JP"};
+function lineKey(text){ return String(text || "").trim().replace(/\s+/g, " ").toLowerCase(); }
+function knownLine(text, lang){
+  if (!lang || lang === "en") return String(text || "").trim();
+  const row = LINES[lineKey(text)];
+  return row && row[lang] ? row[lang] : "";
+}
+function readTr(){ try { return JSON.parse(localStorage.getItem("steadyvoice.tr.v1") || "{}"); } catch { return {}; } }
+function writeTr(map){
+  const entries = Object.entries(map).slice(-80);
+  try { localStorage.setItem("steadyvoice.tr.v1", JSON.stringify(Object.fromEntries(entries))); } catch {}
+}
+async function deviceTranslate(text, lang){
+  if (!window.Translator) return "";
+  try {
+    const tool = await Translator.create({ sourceLanguage: "en", targetLanguage: lang });
+    return (await tool.translate(text)).trim();
+  } catch { return ""; }
+}
+async function onlineTranslate(text, lang){
+  const code = lang === "zh" ? "zh-CN" : lang;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    const response = await fetch("https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text.slice(0, 400)) + "&langpair=en|" + code, { signal: controller.signal });
+    const data = await response.json();
+    const out = data && data.responseData && data.responseData.translatedText ? String(data.responseData.translatedText).trim() : "";
+    if (!out || /MYMEMORY WARNING|QUERY LENGTH|INVALID/i.test(out)) return "";
+    return out;
+  } catch { return ""; }
+  finally { clearTimeout(timer); }
+}
+async function translateLine(text, lang){
+  const clean = String(text || "").trim();
+  const code = lang || "en";
+  if (!clean || code === "en") return { text: clean, via: "same" };
+  const known = knownLine(clean, code);
+  if (known) return { text: known, via: "known" };
+  const cache = readTr();
+  const key = code + "\u0000" + lineKey(clean);
+  if (cache[key]) return { text: cache[key], via: "online" };
+  const device = await deviceTranslate(clean, code);
+  if (device){ cache[key] = device; writeTr(cache); return { text: device, via: "device" }; }
+  const online = await onlineTranslate(clean, code);
+  if (online){ cache[key] = online; writeTr(cache); return { text: online, via: "online" }; }
+  return { text: clean, via: "english" };
+}
+function pickLangVoice(lang){
+  const all = speechSynthesis.getVoices();
+  const kind = (preset().kind === "man") ? "man" : "woman";
+  const saved = state.settings.voiceURI ? all.find(v => v.voiceURI === state.settings.voiceURI) : null;
+  if (saved && (!lang || lang === "en" || String(saved.lang || "").toLowerCase().startsWith(lang))) return saved;
+  const prefix = !lang || lang === "en" ? "en" : lang;
+  const pool = all.filter(v => String(v.lang || "").toLowerCase().replace("_","-").startsWith(prefix));
+  const men = pool.filter(v => MALE.test(v.name) && !FEMALE.test(v.name));
+  const women = pool.filter(v => FEMALE.test(v.name) && !MALE.test(v.name));
+  if (kind === "man" && men.length) return men[0];
+  if (kind !== "man" && women.length) return women[0];
+  return pool[0] || all[0];
+}
+async function say(text){
+  pauseNote();
+  const clean = text.trim();
+  if (!clean || !window.speechSynthesis){ notice = "Open this file in Chrome so the phone can speak."; render(); return; }
+  if (navigator.vibrate) navigator.vibrate(12);
+  state.history = [clean].concat((state.history||[]).filter(x => x !== clean)).slice(0,12);
+  const hit = phrases().find(p => p.speak === clean);
+  state.uses = state.uses || {};
+  if (hit) state.uses[hit.id] = (state.uses[hit.id] || 0) + 1;
+  rememberLine(clean);
+  learn(clean);
+  save();
+  const lang = state.settings.outputLang || "en";
+  let spoken = clean;
+  if (lang !== "en"){
+    const turned = await translateLine(clean, lang);
+    spoken = turned.text;
+    if (turned.via === "english") notice = "Could not translate that. Said it in English.";
+    else if (!speechSynthesis.getVoices().some(v => String(v.lang || "").toLowerCase().replace("_","-").startsWith(lang))) notice = "This phone has no " + (LANGS.find(item => item[0] === lang) || ["",""])[1] + " voice. The words are still in that language.";
+  }
+  resumeVoice();
+  speechSynthesis.cancel();
+  const shaped = shape();
+  const voice = pickLangVoice(lang);
+  const onCall = liveCall();
+  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.lang = BCP[lang] || "en-US"; u.rate = onCall ? Math.min(shaped.rate, 0.8) : shaped.rate; u.pitch = shaped.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
+  speaking = spoken;
+  const last = make(spoken);
+  last.onend = last.onerror = () => { speaking = ""; render(); };
+  const lead = onCall && state.settings.leadIn ? (knownLine("Please listen.", lang) || "Please listen.") : "";
+  setTimeout(() => {
+    speechSynthesis.resume();
+    if (lead) speechSynthesis.speak(make(lead));
+    speechSynthesis.speak(last);
+  }, 60);
+  applyRoute();
+  render();
+}
+function textIt(text){ location.href = "sms:?&body=" + encodeURIComponent(text); }
+function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
+function mine(){
+  const blank = {fullName:"", preferred:"", birth:"", phone:"", email:"", address:"", city:"", license:"", plate:"", vehicle:"", hobbies:"", color:"", blood:"", allergies:"", diabetic:"", medicines:"", conditions:"", doctor:"", doctorPhone:"", insurance:"", memberId:"", pharmacy:"", emergencyName:"", emergencyRelation:"", emergencyPhone:"", people:[], reminders:[], doses:[]};
+  if (!state.profile || typeof state.profile !== "object") state.profile = Object.assign({}, blank);
+  Object.keys(blank).forEach(key => { if (state.profile[key] == null) state.profile[key] = blank[key]; });
+  if (!Array.isArray(state.profile.people)) state.profile.people = [];
+  if (!Array.isArray(state.profile.reminders)) state.profile.reminders = [];
+  if (!Array.isArray(state.profile.doses)) state.profile.doses = [];
+  return state.profile;
+}
+function profileFacts(){
+  const p = mine();
+  const facts = [];
+  const add = (label, say, keys) => { const line = String(say || "").replace(/\s+/g, " ").trim(); if (line) facts.push({label, say: line, keys: keys.filter(Boolean)}); };
+  const called = String(p.preferred || p.fullName || "").trim();
+  if (called) add("My name", "My name is " + called + ".", ["my name", "name"]);
+  const home = [p.address, p.city].map(item => String(item || "").trim()).filter(Boolean).join(", ");
+  if (home) add("My address", "My address is " + home + ".", ["my address", "address", "where i live", "home"]);
+  if (String(p.phone || "").trim()) add("My phone", "My phone number is " + p.phone.trim() + ".", ["my phone", "phone", "phone number"]);
+  if (String(p.email || "").trim()) add("My email", "My email is " + p.email.trim() + ".", ["email", "my email"]);
+  if (String(p.birth || "").trim()) add("Birthday", "My date of birth is " + p.birth.trim() + ".", ["birthday", "date of birth", "born"]);
+  if (String(p.license || "").trim()) add("Driver license", "My driver's license number is " + p.license.trim() + ".", ["license", "driver", "my license", "drivers license"]);
+  if (String(p.plate || "").trim()) add("License plate", "My license plate is " + p.plate.trim() + ".", ["plate", "license plate", "my plate"]);
+  if (String(p.vehicle || "").trim()) add("My car", "My vehicle is " + p.vehicle.trim() + ".", ["car", "vehicle", "my car"]);
+  if (String(p.hobbies || "").trim()) add("Hobbies", "My hobbies are " + p.hobbies.trim() + ".", ["hobby", "hobbies", "my hobbies"]);
+  if (String(p.color || "").trim()) add("Favorite color", "My favorite color is " + p.color.trim() + ".", ["color", "favorite color"]);
+  if (String(p.blood || "").trim()) add("Blood type", "My blood type is " + p.blood.trim() + ".", ["blood", "blood type"]);
+  if (String(p.allergies || "").trim()) add("Allergies", "My allergies are " + p.allergies.trim() + ".", ["allergy", "allergies"]);
+  if (p.diabetic === "yes") add("Diabetes", "Yes. I am diabetic.", ["diabetic", "diabetes", "sugar"]);
+  if (p.diabetic === "no") add("Diabetes", "No. I am not diabetic.", ["diabetic", "diabetes", "sugar"]);
+  if (p.diabetic === "unsure") add("Diabetes", "I am not sure if I am diabetic.", ["diabetic", "diabetes"]);
+  const scheduled = (p.doses || []).filter(dose => String(dose.name || "").trim()).map(dose => dose.name.trim() + (dose.amount ? ", " + dose.amount.trim() : "") + (dose.times && dose.times.length ? " at " + dose.times.join(" and ") : ""));
+  if (scheduled.length) add("Medicines", "I take " + scheduled.join(". ") + ".", ["medicine", "medicines", "medication", "my medicine"]);
+  else if (String(p.medicines || "").trim()) add("Medicines", "My medicines are " + p.medicines.trim() + ".", ["medicine", "medicines", "medication", "my medicine"]);
+  if (String(p.conditions || "").trim()) add("Health", "Please know this about my health. " + p.conditions.trim(), ["health", "condition"]);
+  if (String(p.doctor || "").trim() || String(p.doctorPhone || "").trim()) add("My doctor", "My doctor is " + [p.doctor, p.doctorPhone].map(item => String(item || "").trim()).filter(Boolean).join(", ") + ".", ["doctor", "my doctor"]);
+  if (String(p.pharmacy || "").trim()) add("Pharmacy", "My pharmacy is " + p.pharmacy.trim() + ".", ["pharmacy"]);
+  if (String(p.insurance || "").trim() || String(p.memberId || "").trim()) add("Insurance", "My insurance is " + (String(p.insurance || "").trim() || "on file") + (String(p.memberId || "").trim() ? ". The member number is " + p.memberId.trim() : "") + ".", ["insurance", "member"]);
+  if (String(p.emergencyName || "").trim() || String(p.emergencyPhone || "").trim()) add("Emergency contact", "In an emergency, call " + (String(p.emergencyName || "").trim() || "my contact") + (String(p.emergencyPhone || "").trim() ? " at " + p.emergencyPhone.trim() : "") + ".", ["emergency contact"]);
+  (p.people || []).forEach(person => {
+    const name = String(person.name || "").trim();
+    const relation = String(person.relation || "").trim();
+    if (!name && !relation) return;
+    const line = relation && name ? "My " + relation + " is " + name + "." : name ? "This is " + name + "." : "My " + relation + ".";
+    add(name || relation, line + (person.note ? " " + String(person.note).trim() : ""), [name.toLowerCase(), relation.toLowerCase(), relation ? "my " + relation.toLowerCase() : ""]);
+  });
+  return facts;
+}
+function matchingFacts(query){
+  const needle = String(query || "").trim().toLowerCase();
+  if (needle.length < 2) return [];
+  return profileFacts().filter(fact => fact.keys.some(key => key && (key.startsWith(needle) || needle.startsWith(key) || (needle.length >= 3 && key.includes(needle))))).slice(0, 4).map(fact => fact.say);
+}
+function about(){
+  const p = mine();
+  const box = (key, label, placeholder) => `<label>${label}<input data-field="${key}" value="${esc(p[key] || "")}" placeholder="${esc(placeholder)}"></label>`;
+  const says = profileFacts().map((fact, index) => `<button class="chip" data-fact="${index}" type="button">Say ${esc(fact.label)}</button>`).join("");
+  const people = (p.people || []).map(person => `<div class="card"><input data-person="${esc(person.id)}" data-part="name" value="${esc(person.name || "")}" placeholder="Name, like Alice"><input data-person="${esc(person.id)}" data-part="relation" value="${esc(person.relation || "")}" placeholder="Who, like Daughter"><input data-person="${esc(person.id)}" data-part="note" value="${esc(person.note || "")}" placeholder="A detail to remember"><button class="wide ghost" data-drop-person="${esc(person.id)}" type="button">Remove</button></div>`).join("");
+  const memories = (p.reminders || []).map(item => `<div class="row"><button class="wide ghost" data-memory="${esc(item.id)}" type="button">${esc(item.text)}</button><button class="ghost" data-drop-memory="${esc(item.id)}" type="button">Delete</button></div>`).join("");
+  return `<p class="muted">Fill this in once. On Type a sentence, my address, my license, or a person's name offers the real words. This stays on the phone. Save a copy so a reinstall can put it back. Do not store a Social Security number.</p>
+    <div class="chips">${says}</div>
+    ${fold("who", "Who I am", box("preferred", "What people call me", "First name") + box("fullName", "Full name", "First and last") + box("birth", "Date of birth", "Month day, year") + box("phone", "Phone", "Her number") + box("email", "Email", "name@email.com") + box("hobbies", "Hobbies", "Gardening, music") + box("color", "Favorite color", "Blue"))}
+    ${fold("home", "Home, car, and license", box("address", "Street address", "123 Main Street") + box("city", "City and state", "Town, state") + box("license", "Driver's license number", "License number") + box("plate", "License plate", "ABC-1234") + box("vehicle", "Car", "Blue Honda, 2014"))}
+    ${fold("health", "Health", `<p class="kicker">Diabetic?</p><div class="grid" style="grid-template-columns:1fr 1fr 1fr">${["yes","Yes","no","No","unsure","Not sure"].reduce((html, item, index, all) => index % 2 ? html + `<button class="${p.diabetic===all[index-1]?"ink":"ghost"}" data-diabetic="${all[index-1]}" type="button">${item}</button>` : html, "")}</div>` + box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + `<p><b>Medicine alarm</b></p><p class="muted">Add a name, an amount, and a time. Allow alerts, then install Speak Well. The phone can ring after the app is closed. Tap the alert and it says the medicine twice.</p><input id="med-name" placeholder="Medicine name"><input id="med-amount" placeholder="Amount, like 10 mg"><input id="med-time" type="time" value="08:00"><button class="wide ink" id="add-dose" type="button">Add this medicine</button><button class="wide ghost" id="allow-alerts" type="button">Allow phone alerts</button>` + (p.doses || []).map(dose => `<div class="card"><b>${esc(dose.name || "")}</b> ${esc(dose.amount || "")}<p class="muted">${esc((dose.times || []).join(", ") || "No time yet")}</p><button class="ghost" data-dose-sound="${esc(dose.id)}" type="button">${dose.sound === false ? "Ringtone off" : "Ringtone on"}</button><button class="ghost" data-dose-vibrate="${esc(dose.id)}" type="button">${dose.vibrate === false ? "Vibrate off" : "Vibrate on"}</button><button class="wide ghost" data-test-dose="${esc(dose.id)}" type="button">Test alarm</button><button class="wide ghost" data-drop-dose="${esc(dose.id)}" type="button">Remove</button></div>`).join("") + box("medicines", "Other medicine notes", "Anything the alarm does not cover") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
+    ${fold("people", "People", box("emergencyName", "Emergency contact", "Name") + box("emergencyRelation", "Who they are", "Sister, neighbor") + box("emergencyPhone", "Their phone", "Number") + people + `<button class="wide ink" id="add-person" type="button">Add a person</button>`)}
+    ${fold("remember", "Remember for later", `<p class="muted">Short things. Appointments, where the car is, what she meant to say.</p><div class="row"><input id="memory" placeholder="Remember…"><button class="ink" id="add-memory" type="button">Save</button></div>${memories}`)}
+    <button class="wide ink" id="save-profile" type="button">Save a copy of my information</button>
+    <label class="wide ghost" style="display:flex;align-items:center;justify-content:center">Put my information back<input id="restore-profile" type="file" accept="application/json" style="display:none"></label>`;
+}
+
+let ringTimer = 0, ringCtx = null, rangToken = "", due = null;
+function stopRing(){
+  clearInterval(ringTimer);
+  ringTimer = 0;
+  if (ringCtx){ try { ringCtx.close(); } catch (error) {} ringCtx = null; }
+  if (navigator.vibrate) navigator.vibrate(0);
+}
+function startRing(vibrate){
+  stopRing();
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  const ctx = new Ctx();
+  ringCtx = ctx;
+  const beep = () => {
+    if (ringCtx !== ctx) return;
+    const tone = ctx.createOscillator();
+    const gain = ctx.createGain();
+    tone.type = "square";
+    tone.frequency.value = 880;
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+    tone.connect(gain);
+    gain.connect(ctx.destination);
+    tone.start();
+    tone.stop(ctx.currentTime + 0.3);
+  };
+  beep();
+  ringTimer = setInterval(beep, 900);
+  if (vibrate !== false && navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 700]);
+  setTimeout(() => { if (ringCtx === ctx) stopRing(); }, 45000);
+}
+function doseDay(now){ const day = now || new Date(); return day.getFullYear() + "-" + (day.getMonth() + 1) + "-" + day.getDate(); }
+function doseClock(now){ const day = now || new Date(); return String(day.getHours()).padStart(2, "0") + ":" + String(day.getMinutes()).padStart(2, "0"); }
+function readFired(){ try { return JSON.parse(localStorage.getItem("steadyvoice.dose.fired") || "{}"); } catch (error) { return {}; } }
+function findDue(){
+  const clock = doseClock();
+  const day = doseDay();
+  const fired = readFired();
+  for (const dose of mine().doses || []){
+    if (!String(dose.name || "").trim()) continue;
+    for (const time of dose.times || []){
+      if (time === clock && !fired[dose.id + "@" + time + "@" + day]) return {dose, time};
+    }
+  }
+  return null;
+}
+function markDose(id, time){
+  const day = doseDay();
+  const next = {};
+  Object.keys(readFired()).forEach(key => { if (key.endsWith("@" + day)) next[key] = 1; });
+  next[id + "@" + time + "@" + day] = 1;
+  try { localStorage.setItem("steadyvoice.dose.fired", JSON.stringify(next)); } catch (error) {}
+}
+
+function doseLine(dose){ return "Time to take " + dose.name + (dose.amount ? ", " + dose.amount : "") + "."; }
+function speakAlarm(line){
+  if (!line || !window.speechSynthesis) return;
+  startRing(true);
+  const once = () => {
+    const utter = new SpeechSynthesisUtterance(line);
+    utter.rate = 0.9;
+    return utter;
+  };
+  const first = once();
+  first.onend = () => speechSynthesis.speak(once());
+  speechSynthesis.cancel();
+  speechSynthesis.speak(first);
+}
+function nextStamp(hhmm){
+  const parts = String(hhmm || "00:00").split(":");
+  const when = new Date();
+  when.setHours(Number(parts[0]) || 0, Number(parts[1]) || 0, 0, 0);
+  if (when.getTime() <= Date.now() + 20000) when.setDate(when.getDate() + 1);
+  return when.getTime();
+}
+function scheduleAlarms(){
+  if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
+  const alarms = [];
+  (mine().doses || []).forEach(dose => {
+    if (!dose.name || !dose.times) return;
+    dose.times.forEach(time => alarms.push({
+      id: dose.id, time, when: nextStamp(time),
+      title: "Time for " + dose.name,
+      body: doseLine(dose),
+      line: doseLine(dose),
+      vibrate: dose.vibrate !== false
+    }));
+  });
+  navigator.serviceWorker.register("./sw.js").then(() => navigator.serviceWorker.ready).then(reg => {
+    if (reg.active) reg.active.postMessage({ type: "schedule", alarms });
+  }).catch(() => {});
+}
+function checkDose(){
+  const hit = findDue();
+  if (!hit){
+    if (due){ due = null; render(); }
+    return;
+  }
+  const token = hit.dose.id + "@" + hit.time;
+  due = hit;
+  if (rangToken === token) return;
+  rangToken = token;
+  const line = doseLine(hit.dose);
+  if (hit.dose.sound !== false) speakAlarm(line);
+  else if (window.speechSynthesis){
+    const utter = new SpeechSynthesisUtterance(line);
+    utter.rate = 0.9;
+    utter.onend = () => speechSynthesis.speak(new SpeechSynthesisUtterance(line));
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+    if (hit.dose.vibrate !== false && navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 700]);
+  }
+  if (navigator.serviceWorker){
+    navigator.serviceWorker.ready.then(reg => reg.showNotification("Time for " + hit.dose.name, {
+      body: line, tag: "speakwell-now-" + hit.dose.id, renotify: true, requireInteraction: true,
+      vibrate: hit.dose.vibrate === false ? undefined : [500, 200, 500, 200, 800],
+      data: { line }
+    })).catch(() => {});
+  }
+}
+
+function helpPage(){
+  return `<p>Speak Well talks when she taps a button. Nothing she types is uploaded.</p>
+    <div class="card"><b>Put it on the phone</b><p>Open the link in Chrome. Tap the three dots. Tap Install app, or Add to Home screen. Next time, tap the Speak Well icon.</p></div>
+    <div class="card"><b>Medicine alarm</b><p>About me, then Health. Add the name, the amount, and the time. Tap Allow phone alerts. Install the app. The phone can ring, vibrate, and show the alert after Speak Well is closed. Tap the alert and it says the medicine out loud, twice. I took it stops it for that time today.</p></div>
+    <div class="card"><b>On a call</b><p>Tap Phone call at the top. On the phone's call screen, tap Speaker. Hold the phone a little away. The other person hears her through the microphone.</p></div>
+    <div class="card"><b>If the app is reinstalled</b><p>About me, Save a copy of my information. Later, Put my information back and choose that file.</p></div>
+    <button class="wide ink" data-go="guide" type="button">Show me how</button>`;
+}
+function render(){
+  document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
+  renderSound();
+  const speakingScreen = tab === "board" || tab === "say" || tab === "call" || tab === "notes" || liveCall();
+  const sound = $("#sound");
+  if (sound) sound.style.display = speakingScreen ? "" : "none";
+  const footer = document.querySelector("footer");
+  if (footer) footer.style.display = speakingScreen ? "" : "none";
+  const home = $("#home");
+  if (home) home.style.display = tab === "menu" ? "none" : "";
+  const dock = document.querySelector("footer .dock");
+  if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
+  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "help" ? "Help" : tab === "more" ? "Voices and look" : "Say a phrase";
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  const at = Math.min(slot.place || 0, lines.length);
+  const waiting = tab !== "notes" && lines.length && (noteReading || (at > 0 && at < lines.length));
+  const waitBar = waiting ? `<div class="card" style="display:flex;gap:.4rem;align-items:center"><button class="wide ghost" data-go="notes" type="button" style="flex:1;text-align:left"><b>${esc(slot.title)}</b><br><span class="muted">${noteReading ? "Speaking line " + (at + 1) + " of " + lines.length : "Paused at line " + (at + 1) + " of " + lines.length}</span></button><button class="teal" id="note-bar" type="button">${noteReading ? "Pause" : "Continue"}</button></div>` : "";
+  const doseBar = due ? `<div class="card"><b>Time for ${esc(due.dose.name)}</b><p>${esc([due.dose.amount, due.time].filter(Boolean).join(" · "))}</p><button class="wide ink" id="took-dose" type="button">I took it</button><button class="wide ghost" id="stop-dose" type="button">Stop alarm</button></div>` : "";
+  const banner = doseBar + waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close Speak Well.</p>` : "");
+  const steps = [
+    "Tap a phrase. Speak Well says it out loud.",
+    "Speaker is for people in the room. Phone call is for someone on the phone. Then tap Speaker on the phone's call screen.",
+    "If the words are not on a button, type them, then tap Say it.",
+    "About me stores her address, people, hobbies, and medicines. Typing my address offers the real words.",
+    "Add a medicine and a time. Tap Allow phone alerts. Install Speak Well so the alarm can ring after the app is closed. Tap the alert. Speak Well says the medicine twice.",
+    "Tap Home to come back. Tap Stop if the voice should be quiet. Help is on the home screen if you need the steps again."
+  ];
+  const guide = guideOn ? `<div class="card" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:8"><p class="kicker">Step ${guideStep + 1} of ${steps.length}</p><p style="font-size:1.2rem;font-weight:650">${esc(steps[guideStep] || "")}</p><button class="wide teal" id="guide-next" type="button">${guideStep >= steps.length - 1 ? "Done" : "Next"}</button><button class="wide ghost" id="guide-skip" type="button">Skip</button></div>` : "";
+  if (tab === "menu") view.innerHTML = banner + menu() + guide;
+  else if (tab === "board") view.innerHTML = banner + board() + guide;
+  else if (tab === "say") view.innerHTML = banner + typer() + guide;
+  else if (tab === "notes") view.innerHTML = banner + notepad() + guide;
+  else if (tab === "about") view.innerHTML = banner + about() + guide;
+  else if (tab === "help") view.innerHTML = banner + helpPage() + guide;
+  else if (tab === "call") view.innerHTML = banner + call() + guide;
+  else view.innerHTML = banner + more() + guide;
+  if (tab === "say") bindComposer();
+}
+function paintHints(){
+  const pack = typingPack();
+  const phraseRow = document.getElementById("phrase-line");
+  const wordRow = document.getElementById("word-line");
+  const chip = (item, kind) => `<button class="chip" data-suggest="${esc(item)}" data-kind="${kind}" type="button">${esc(item)}</button>`;
+  if (phraseRow && state.settings.phraseLine !== false) phraseRow.innerHTML = pack.phrases.map(item => chip(item, "phrase")).join("");
+  if (wordRow && state.settings.wordLine !== false) wordRow.innerHTML = pack.words.map(item => chip(item, "word")).join("");
+}
+function queueGloss(){
+  clearTimeout(queueGloss.timer);
+  const slot = document.getElementById("gloss");
+  const lang = state.settings.outputLang || "en";
+  if (!slot) return;
+  if (lang === "en" || !draft.trim()){ slot.textContent = ""; return; }
+  queueGloss.timer = setTimeout(async () => {
+    const turned = await translateLine(draft.trim(), lang);
+    const live = document.getElementById("gloss");
+    if (live) live.textContent = turned.via === "english" ? "" : "Will say: " + turned.text;
+  }, 280);
+}
+function bindComposer(){
+  const box = document.getElementById("box");
+  const bar = document.getElementById("composer");
+  if (!box || !bar) return;
+  const place = () => {
+    const view = window.visualViewport;
+    const overlap = view ? Math.max(0, window.innerHeight - view.height - view.offsetTop) : 0;
+    const up = state.settings.pinBox !== false && document.activeElement === box && overlap > 40;
+    bar.style.position = up ? "fixed" : "";
+    bar.style.left = up ? "0" : "";
+    bar.style.right = up ? "0" : "";
+    bar.style.bottom = up ? overlap + "px" : "";
+    bar.style.zIndex = up ? "30" : "";
+    bar.style.background = up ? "var(--paper)" : "";
+    bar.style.padding = up ? ".5rem 1rem .6rem" : "";
+    const footer = document.querySelector("footer");
+    if (footer) footer.style.display = document.activeElement === box ? "none" : "";
+    box.scrollTop = box.scrollHeight;
+  };
+  box.addEventListener("focus", place);
+  box.addEventListener("blur", () => setTimeout(place, 80));
+  if (window.visualViewport){
+    window.visualViewport.addEventListener("resize", place);
+    window.visualViewport.addEventListener("scroll", place);
+  }
+  place();
+}
+function menu(){
+  const rows = [
+    ["board", "Say a phrase", "Tap a button. The phone says the whole sentence."],
+    ["say", "Type a sentence", "Write words that are not on a button."],
+  ["notes", "Notepad", "Write it ahead. Pause, then pick up the same line."],
+  ["about", "About me", "Address, license, people, and things to remember."],
+    ["call", "Phone call", "So the person on the line can hear her."],
+    ["talks", "Conversations", "Open an earlier talk and say it again."],
+    ["more", "Voices and look", "Change the voice, the size, or the dark screen."],
+    ["help", "Help", "Setup, medicine alarms, and how to put it on the phone."],
+    ["guide", "Show me how", "A short walk-through. You can come back anytime."]
+  ];
+  const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  const setup = installed ? "" : `<div class="card"><b>Put this on the phone</b><p>In Chrome, tap the three dots. Tap Install app, or Add to Home screen. Open Speak Well from that icon next time. Then tap Allow phone alerts so medicine alarms can ring after the app is closed.</p></div>`;
+  return setup + rows.map(row => `<button class="wide" data-go="${row[0]}" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>${row[1]}</b><br><span class="muted">${row[2]}</span></button>`).join("")
+    + `<button class="wide ghost" data-go="emergency" type="button" style="display:block;width:100%;text-align:left;margin-top:1rem"><b>Emergency</b><br><span class="muted">Only if she needs help right now.</span></button>`;
+}
+function shown(){
+  const hidden = new Set(state.hidden || []);
+  const list = phrases().filter(p => !hidden.has(p.id) && p.id !== "emergency" && p.id !== "911" && (group === "All" || p.group === group) && (!query || (p.label+" "+p.speak).toLowerCase().includes(query.toLowerCase())));
+  const uses = state.uses || {};
+  const order = state.order || [];
+  const rank = new Map(order.map((id, i) => [id, i]));
+  const mode = state.settings.sort || "used";
+  return list.sort((a, b) => {
+    if (mode === "az") return a.label.localeCompare(b.label);
+    if (mode === "group") return a.group.localeCompare(b.group) || a.label.localeCompare(b.label);
+    if (mode === "manual") return (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999);
+    return (uses[b.id] || 0) - (uses[a.id] || 0);
+  });
+}
+function move(id, dir){
+  const list = shown().map(p => p.id);
+  const i = list.indexOf(id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  const hold = list[i]; list[i] = list[j]; list[j] = hold;
+  const full = (state.order || []).concat(phrases().map(p => p.id));
+  const seen = new Set();
+  const base = full.filter(x => seen.has(x) ? false : (seen.add(x), true));
+  let cursor = 0;
+  state.order = base.map(item => list.includes(item) ? list[cursor++] : item);
+  state.settings.sort = "manual";
+  save();
+  render();
+}
+function board(){
+  const groups = ["All","Urgent","Needs","Feelings","Talk","People","Care"];
+  const list = shown();
+  const sorts = [["used","Most used"],["az","A–Z"],["group","Group"],["manual","My order"]];
+  const tools = arranging ? `<div class="card"><p>Arrange is on. These buttons will not speak.</p>
+    <button class="wide teal" id="done" type="button">Done</button>
+    <div class="tools">${sorts.map(([id,label]) => `<button class="chip${state.settings.sort===id?" on":""}" data-sort="${id}" type="button">${label}</button>`).join("")}</div>
+    <div class="tools">
+      <button class="chip" id="theme" type="button">${state.settings.theme==="night"?"Dark on":"Dark off"}</button>
+      <button class="chip" id="cols" type="button">${state.settings.columns||2} columns</button>
+      <button class="chip" id="chips" type="button">${state.settings.showChips===false?"Groups off":"Groups on"}</button>
+      <button class="chip" id="dock" type="button">${state.settings.showDock===false?"Yes/No bar off":"Yes/No bar on"}</button>
+    </div></div>` : `<p class="muted">Tap a button. The phone says the full sentence.</p>`;
+  const chips = state.settings.showChips === false ? "" : `<div class="chips">${groups.map(g => `<button class="chip${g===group?" on":""}" data-group="${g}" type="button">${g}</button>`).join("")}</div>`;
+  const cols = state.settings.columns === 1 ? "1fr" : state.settings.columns === 3 ? "1fr 1fr 1fr" : "1fr 1fr";
+  const cards = list.map((p, index) => arranging
+    ? `<div class="pad ${p.tone}"><b>${esc(p.label)}</b><div class="tools"><button class="chip" data-move="${esc(p.id)}" data-dir="-1" type="button" ${index===0?"disabled":""}>Up</button><button class="chip" data-move="${esc(p.id)}" data-dir="1" type="button" ${index===list.length-1?"disabled":""}>Down</button><button class="chip" data-hide="${esc(p.id)}" type="button">Hide</button></div></div>`
+    : `<button class="pad ${p.tone}" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b><span>${esc(p.group)}</span></button>`).join("");
+  const hidden = (state.hidden||[]).map(id => phrases().find(p => p.id === id)).filter(Boolean);
+  const back = arranging && hidden.length ? `<p class="kicker">Hidden</p>` + hidden.map(p => `<button class="wide ghost" data-show="${esc(p.id)}" type="button">Put back: ${esc(p.label)}</button>`).join("") : "";
+  const note = !arranging && state.settings.comedyId ? `<button class="wide" id="reset-voice" type="button" style="margin-bottom:.5rem">Playing ${esc((COMEDY.find(item => item.id === state.settings.comedyId)||{}).name || "a play voice")}. Tap for her normal voice.</button>` : "";
+  const boardOpts = arranging ? "" : fold("board", "Board options", `<p class="muted">To move, hide, or restyle buttons, open More and then Arrange.</p>`);
+  const tucked = phrases().filter(p => (p.id === "emergency" || p.id === "911") && !(state.hidden||[]).includes(p.id));
+  const emergency = tucked.length ? fold("emergency", "Emergency", `<p class="muted">Tucked here so a tap on the board cannot start them.</p><div class="grid" style="margin-top:.4rem">${tucked.map(p => `<button class="pad urgent" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>`) : "";
+  const langNote = (state.settings.outputLang && state.settings.outputLang !== "en") ? `<p class="note">Buttons are spoken in ${esc((LANGS.find(item => item[0] === state.settings.outputLang) || ["","English"])[1])}. Change it under Type a sentence.</p>` : "";
+  return `${langNote}${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${emergency}${boardOpts}`;
+}
+function typer(){
+  const mood = Number(state.settings.mood);
+  const moodSafe = Number.isFinite(mood) ? mood : 50;
+  const word = moodSafe < 35 ? "Soft" : moodSafe > 65 ? "Harsh" : "Natural";
+  const comedy = state.settings.comedyId || "";
+  const chips = [{id:"", name:"Normal"}].concat(COMEDY).map(item => `<button class="chip${comedy===item.id?" on":""}" data-comedy="${item.id}" type="button">${item.name}</button>`).join("");
+  const wordOn = state.settings.wordLine !== false;
+  const phraseOn = state.settings.phraseLine !== false;
+  const pinOn = state.settings.pinBox !== false;
+  const from = state.settings.hintFrom || "both";
+  const pack = typingPack();
+  const options = fold("speak", "Typing and extras", `<button class="wide ghost" id="word-line" type="button">${wordOn ? "Word line is on" : "Word line is off"}</button><button class="wide ghost" id="phrase-toggle" type="button">${phraseOn ? "Phrase line is on" : "Phrase line is off"}</button><button class="wide ghost" id="pin-box" type="button">${pinOn ? "Box stays above the keyboard" : "Box stays in place"}</button><button class="wide ${from==="both"?"ink":"ghost"}" data-from="both" type="button">Board and her words</button><button class="wide ${from==="said"?"ink":"ghost"}" data-from="said" type="button">Only words she has said</button><button class="wide ${from==="board"?"ink":"ghost"}" data-from="board" type="button">Only board phrases</button><button class="wide ink" id="do-text" type="button">Text it</button><button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button>`);
+  return `<button class="wide" data-go="notes" type="button" style="text-align:left;margin-bottom:.6rem"><b>Notepad</b><br><span class="muted">Write a long script. Pause it, then start again on the same line.</span></button>
+    <label for="box">What should the phone say?</label>
+    <div class="chips" style="flex-wrap:nowrap;overflow-x:auto">${LANGS.map(([id,label]) => `<button class="chip${(state.settings.outputLang||"en")===id?" on":""}" data-lang="${id}" type="button">${label}</button>`).join("")}</div>
+    <p class="muted" id="gloss"></p>
+    <div id="composer">
+      ${phraseOn ? hintRow(pack.phrases, "phrase") : `<div id="phrase-line"></div>`}
+      ${wordOn ? hintRow(pack.words, "word") : `<div id="word-line"></div>`}
+      <div class="row" style="align-items:stretch">
+        <textarea id="box" rows="2" style="min-height:4.2rem;margin:0;flex:1">${esc(draft)}</textarea>
+        <button class="teal" id="do-say" type="button" style="width:6rem">Say it</button>
+      </div>
+    </div>
+    <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Soft</span><input id="mood" type="range" min="0" max="100" value="${moodSafe}" aria-label="Mood, from soft to harsh" style="flex:1;accent-color:#0e6b62"><span class="muted">Harsh</span></div>
+    <p class="muted" id="mood-word">${word}</p>
+    <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Slow</span><input id="speed" type="range" min="70" max="135" value="${Math.round((Number(state.settings.speed)||1)*100)}" aria-label="Speed, from slow to fast" style="flex:1;accent-color:#0e6b62"><span class="muted">Fast</span></div>
+    <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Low</span><input id="pitch" type="range" min="55" max="155" value="${Math.round((Number(state.settings.pitch)||1)*100)}" aria-label="Pitch, from low to high" style="flex:1;accent-color:#0e6b62"><span class="muted">High</span></div>
+    <button class="wide ghost" id="hear-voice" type="button">Hear this voice</button>
+    <p style="margin:.4rem 0 .2rem;font-weight:600">Women</p>
+    <div class="chips">${PRESETS.filter(p => p.kind==="woman").map(p => `<button class="chip${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div>
+    <p style="margin:.4rem 0 .2rem;font-weight:600">Men</p>
+    <div class="chips">${PRESETS.filter(p => p.kind==="man").map(p => `<button class="chip${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div>
+    <p style="margin:.4rem 0 .2rem;font-weight:600">Play voices</p>
+    <div class="chips">${chips}</div>
+    ${options}`;
+}
+function call(){
+  return `<div class="card"><h2 style="margin:.1rem 0 .4rem">So the other person can hear her</h2>
+    <p>Tap Phone call at the top. On the call screen, tap Speaker, turn the volume up, and hold the phone a little away. She is heard through the microphone.</p></div>
+    <button class="wide teal" data-speak="Can you hear me? I am using Speak Well because I cannot speak." type="button">Test: Can you hear me?</button>
+    <div class="grid" style="margin-top:.7rem">${phrases().filter(p => p.id !== "emergency" && p.id !== "911").slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>
+    ${fold("call", "Call options", `<button class="wide ghost" id="lead" type="button">${state.settings.leadIn ? "Starts with Please listen" : "Phrase only"}</button><div class="voices" style="margin-top:.5rem">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b></button>`).join("")}</div>`)}`;
+}
+let openTalk = "";
+function more(){
+  const women = voices();
+  ensureTalks();
+  if (openTalk){
+    const talk = state.talks.find(item => item.id === openTalk);
+    if (talk) return `<button class="wide ghost" id="close-talk" type="button">Back</button>
+      <h2 style="margin:.6rem 0 .3rem">${esc(talk.title)}</h2>
+      <button class="wide teal" id="replay-open" type="button">Say this talk again</button>
+      ${talk.lines.map(line => `<button class="wide ghost" data-speak="${esc(line)}" type="button" style="margin-top:.4rem">${esc(line)}</button>`).join("")}
+      <button class="wide" id="delete-talk" type="button" style="margin-top:.7rem">Delete this talk</button>`;
+    openTalk = "";
+  }
+  const current = state.talks.find(item => item.id === state.currentId) || {title:"", lines:[]};
+  const earlier = state.talks.filter(item => item.id !== state.currentId && item.lines && item.lines.length);
+  const recent = current.lines.slice(-4).map(line => `<p class="muted">${esc(line)}</p>`).join("") || `<p class="muted">Nothing yet. Tap a button and it will show up here.</p>`;
+  const old = earlier.map(item => `<button class="wide ghost" data-open-talk="${esc(item.id)}" type="button" style="margin-top:.4rem"><b>${esc(item.title)}</b><br><span class="muted">${item.lines.length} lines · ${esc(item.lines[0])}</span></button>`).join("");
+  return `<div class="card"><b>Conversations</b><p>What she says is kept on this phone, in order. Save a talk to start a fresh one and still say the old one later.</p>
+    <p><b>This talk</b> · ${esc(current.title || "")}</p>
+    ${recent}
+    <button class="wide teal" id="replay-current" type="button" ${current.lines.length ? "" : "disabled"}>Say this talk again</button>
+    <button class="wide ink" id="save-talk" type="button" style="margin-top:.4rem" ${current.lines.length ? "" : "disabled"}>Save and start a new talk</button>
+    ${current.lines.length ? `<button class="wide ghost" data-open-talk="${esc(state.currentId)}" type="button" style="margin-top:.4rem">See every line</button>` : ""}
+    ${old ? `<p class="kicker" style="margin-top:.8rem">Earlier</p>${old}` : ""}
+  </div>
+    <div class="card"><b>Voices</b><p>Clara, Helen, June, Mae, and Nora are women. Owen, Caleb, Miles, and Arthur are men. Speed and pitch are on Type a sentence. They use a free voice already on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No named voice yet."} The best free packs come from the phone itself. On Android, search Settings for Text-to-speech, open Google Text-to-speech, and install voice data for her language, male and female if both are listed. On iPhone: Settings, Accessibility, Spoken Content, Voices.</p>
+    <div class="voices">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div></div>
+    <div class="card"><b>Text a phrase</b><p>Text opens the phone's own Messages app with the words filled in. She taps Send. WhatsApp does the same if it is installed. A new messaging app is not required.</p>
+    <button class="wide ink" data-speak="" data-text="I had a stroke. I can hear you. I cannot speak. Please read this text." type="button">Text: I cannot speak</button></div>
+    <div class="card"><b>Put it on the phone</b><p>An iPhone cannot install a random downloaded app. The simple way is Add to Home Screen from Chrome or Safari. Or send this one file, save it in Downloads, and open it with Chrome. Do not open it from inside a zip.</p></div>
+    <button class="wide ink" id="unlock" type="button">Arrange the board</button>
+    <p class="muted">Arrange is locked until you tap that. Done locks it again. Nothing is uploaded.</p>
+    ${fold("more", "More options", `<label>Her name<input id="name" value="${esc(state.settings.name||"")}" placeholder="First name"></label>`)}`;
+}
+view.addEventListener("pointerdown", (event) => {
+  const hint = event.target.closest("[data-suggest], #do-say");
+  if (hint && document.activeElement && document.activeElement.id === "box") event.preventDefault();
+});
+view.addEventListener("click", (event) => {
+  const t = event.target.closest("button");
+  if (!t) return;
+  if (t.dataset.go){
+    if (t.dataset.go === "guide"){ guideOn = true; guideStep = 0; render(); return; }
+    if (t.dataset.go === "talks"){ tab = "more"; openTalk = ""; render(); return; }
+    if (t.dataset.go === "emergency"){ tab = "board"; folds.emergency = true; render(); return; }
+    tab = t.dataset.go;
+    render();
+    return;
+  }
+  if (t.id === "note-go" || t.id === "note-bar"){
+    if (noteReading){ pauseNote(); render(); }
+    else readNote();
+    return;
+  }
+  if (t.id === "note-restart"){ pauseNote(); noteNow().place = 0; save(); readNote(0); return; }
+  if (t.dataset.slot){ pauseNote(); book().active = t.dataset.slot; save(); render(); return; }
+  if (t.dataset.jump){ readNote(Number(t.dataset.jump)); return; }
+  if (t.dataset.fact){ const fact = profileFacts()[Number(t.dataset.fact)]; if (fact) say(fact.say); return; }
+  if (t.id === "add-person"){
+    const profile = mine();
+    if (profile.people.length >= 8) return;
+    profile.people.push({id:"person-"+Date.now(), name:"", relation:"", note:""});
+    save(); render(); return;
+  }
+  if (t.dataset.dropPerson){ const profile = mine(); profile.people = profile.people.filter(person => person.id !== t.dataset.dropPerson); save(); render(); return; }
+  if (t.id === "add-memory"){
+    const box = document.getElementById("memory");
+    const text = box ? box.value.trim() : "";
+    if (!text) return;
+    const profile = mine();
+    profile.reminders.unshift({id:"memory-"+Date.now(), text:text.slice(0, 240), at:Date.now()});
+    profile.reminders = profile.reminders.slice(0, 30);
+    save(); render(); return;
+  }
+  if (t.dataset.memory){ const item = mine().reminders.find(row => row.id === t.dataset.memory); if (item) say(item.text); return; }
+  if (t.dataset.dropMemory){ const profile = mine(); profile.reminders = profile.reminders.filter(row => row.id !== t.dataset.dropMemory); save(); render(); return; }
+  if (t.id === "took-dose" || t.id === "stop-dose"){ if (due) markDose(due.dose.id, due.time); due = null; rangToken = ""; stopRing(); render(); return; }
+  if (t.dataset.diabetic){ const profile = mine(); profile.diabetic = profile.diabetic === t.dataset.diabetic ? "" : t.dataset.diabetic; save(); render(); return; }
+  if (t.id === "add-dose"){
+    const name = (document.getElementById("med-name") || {}).value || "";
+    const amount = (document.getElementById("med-amount") || {}).value || "";
+    const time = (document.getElementById("med-time") || {}).value || "";
+    if (!name.trim() || !time) return;
+    const profile = mine();
+    profile.doses.push({id:"dose-" + Date.now(), name:name.trim().slice(0, 60), amount:amount.trim().slice(0, 40), times:[time], sound:true, vibrate:true});
+    profile.doses = profile.doses.slice(0, 12);
+    save(); scheduleAlarms(); render(); return;
+  }
+  if (t.id === "allow-alerts" && window.Notification){ Notification.requestPermission().then(() => scheduleAlarms()); return; }
+  if (t.dataset.doseSound){ const dose = mine().doses.find(item => item.id === t.dataset.doseSound); if (dose){ dose.sound = dose.sound === false; save(); render(); } return; }
+  if (t.dataset.doseVibrate){ const dose = mine().doses.find(item => item.id === t.dataset.doseVibrate); if (dose){ dose.vibrate = dose.vibrate === false; save(); render(); } return; }
+  if (t.dataset.testDose){ startRing(true); setTimeout(stopRing, 3500); return; }
+  if (t.dataset.dropDose){ const profile = mine(); profile.doses = profile.doses.filter(item => item.id !== t.dataset.dropDose); save(); render(); return; }
+  if (t.id === "save-profile"){
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "speakwell-backup.json";
+    link.click();
+    notice = "Saved. Keep that file. It puts her information back after a reinstall.";
+    render();
+    return;
+  }
+  if (t.dataset.suggest){
+    const suggestion = t.dataset.suggest;
+    const kind = t.dataset.kind || "word";
+    if (kind === "phrase") draft = suggestion;
+    else {
+      const current = draft.trim();
+      if (!current || suggestion.toLowerCase().startsWith(current.toLowerCase())) draft = suggestion + " ";
+      else {
+        const parts = current.split(/\s+/);
+        parts[parts.length - 1] = suggestion;
+        draft = parts.join(" ") + " ";
+      }
+    }
+    render();
+    const box = $("#box");
+    if (box){ box.focus(); box.scrollTop = box.scrollHeight; }
+    return;
+  }
+  if (t.id === "guide-next"){
+    if (guideStep >= 5){ guideOn = false; state.settings.seenTutorial = true; save(); }
+    else guideStep += 1;
+    render();
+    return;
+  }
+  if (t.id === "guide-skip"){ guideOn = false; state.settings.seenTutorial = true; save(); render(); return; }
+  if (t.dataset.fold){ folds[t.dataset.fold] = !folds[t.dataset.fold]; render(); return; }
+  if (t.id === "replay-current"){ replayTalk(state.currentId); return; }
+  if (t.id === "replay-open"){ replayTalk(openTalk); return; }
+  if (t.id === "save-talk"){ saveTalk(); return; }
+  if (t.id === "close-talk"){ openTalk = ""; render(); return; }
+  if (t.id === "delete-talk"){
+    state.talks = (state.talks || []).filter(item => item.id !== openTalk);
+    if (openTalk === state.currentId) state.currentId = "";
+    openTalk = "";
+    ensureTalks();
+    save();
+    render();
+    return;
+  }
+  if (t.dataset.openTalk){ openTalk = t.dataset.openTalk; render(); return; }
+  if (t.dataset.comedy !== undefined){
+    state.settings.comedyId = t.dataset.comedy;
+    save();
+    if (t.dataset.comedy && !liveCall()){
+      const picked = COMEDY.find(item => item.id === t.dataset.comedy);
+      say("Hello. This is the " + (picked ? picked.name : "play") + " voice.");
+    } else render();
+    return;
+  }
+  if (t.id === "reset-voice"){ state.settings.comedyId = ""; state.settings.mood = 50; save(); render(); return; }
+  if (t.id === "unlock"){ arranging = true; tab = "board"; render(); return; }
+  if (t.id === "done"){ arranging = false; render(); return; }
+  if (t.id === "theme"){ state.settings.theme = state.settings.theme === "night" ? "paper" : "night"; save(); render(); return; }
+  if (t.id === "cols"){ state.settings.columns = state.settings.columns === 1 ? 2 : state.settings.columns === 2 ? 3 : 1; save(); render(); return; }
+  if (t.id === "chips"){ state.settings.showChips = state.settings.showChips === false; save(); render(); return; }
+  if (t.id === "dock"){ state.settings.showDock = state.settings.showDock === false; save(); render(); return; }
+  if (t.dataset.sort){ state.settings.sort = t.dataset.sort; save(); render(); return; }
+  if (t.dataset.move){ move(t.dataset.move, Number(t.dataset.dir)); return; }
+  if (t.dataset.hide){ state.hidden = (state.hidden||[]).concat(t.dataset.hide); save(); render(); return; }
+  if (t.dataset.show){ state.hidden = (state.hidden||[]).filter(id => id !== t.dataset.show); save(); render(); return; }
+  if (t.dataset.group){ group = t.dataset.group; render(); return; }
+  if (t.dataset.speak !== undefined && t.dataset.speak){ say(t.dataset.speak); return; }
+  if (t.dataset.text){ textIt(t.dataset.text); return; }
+  if (t.dataset.preset){
+    state.settings.presetId = t.dataset.preset;
+    state.settings.voiceURI = "";
+    save();
+    if (t.dataset.preview) say("Hello. This is " + preset().name + ". I am here with you.");
+    else render();
+    return;
+  }
+  if (t.dataset.word){ draft = (draft ? draft.trim() + " " : "") + t.dataset.word; render(); const box = $("#box"); if (box) box.focus(); return; }
+  if (t.id === "word-line"){ state.settings.wordLine = state.settings.wordLine === false; save(); render(); return; }
+  if (t.id === "phrase-toggle"){ state.settings.phraseLine = state.settings.phraseLine === false; save(); render(); return; }
+  if (t.id === "pin-box"){ state.settings.pinBox = state.settings.pinBox === false; save(); render(); return; }
+  if (t.dataset.from){ state.settings.hintFrom = t.dataset.from; save(); render(); return; }
+  if (t.id === "hear-voice"){ say("Hello. This is how I sound. You can make me lower, higher, slower, or faster."); return; }
+  if (t.id === "do-say") say(draft);
+  if (t.dataset.lang){ state.settings.outputLang = t.dataset.lang; save(); render(); queueGloss(); return; }
+  if (t.id === "do-text" && draft.trim()){ translateLine(draft.trim(), state.settings.outputLang || "en").then(result => textIt(result.text)); return; }
+  if (t.id === "do-wa" && draft.trim()){ translateLine(draft.trim(), state.settings.outputLang || "en").then(result => wa(result.text)); return; }
+  if (t.id === "lead"){ state.settings.leadIn = !state.settings.leadIn; save(); render(); }
+});
+view.addEventListener("input", (event) => {
+  if (event.target.id === "q"){ query = event.target.value; const pos = event.target.selectionStart; render(); const q = $("#q"); if (q){ q.focus(); q.selectionStart = q.selectionEnd = pos; } }
+  if (event.target.id === "box"){
+    draft = event.target.value;
+    event.target.scrollTop = event.target.scrollHeight;
+    paintHints();
+    queueGloss();
+  }
+  if (event.target.id === "mood"){
+    state.settings.mood = Number(event.target.value);
+    const word = state.settings.mood < 35 ? "Soft" : state.settings.mood > 65 ? "Harsh" : "Natural";
+    const label = $("#mood-word");
+    if (label) label.textContent = word;
+    save();
+  }
+  if (event.target.id === "speed"){ state.settings.speed = Number(event.target.value) / 100; save(); }
+  if (event.target.id === "pitch"){ state.settings.pitch = Number(event.target.value) / 100; save(); }
+  if (event.target.id === "note-title"){ noteNow().title = event.target.value.slice(0, 40); save(); }
+  if (event.target.id === "note-body"){
+    if (noteReading) pauseNote();
+    const slot = noteNow();
+    slot.body = event.target.value;
+    const count = scriptLines(slot.body).length;
+    if ((slot.place || 0) > count) slot.place = count;
+    save();
+    paintNote();
+  }
+  if (event.target.dataset.field){
+    mine()[event.target.dataset.field] = event.target.value.slice(0, 240);
+    if (event.target.dataset.field === "preferred" || event.target.dataset.field === "fullName"){
+      const profile = mine();
+      state.settings.name = (profile.preferred || profile.fullName || "").trim();
+    }
+    save();
+  }
+  if (event.target.dataset.person){
+    const person = mine().people.find(item => item.id === event.target.dataset.person);
+    if (person) person[event.target.dataset.part] = event.target.value.slice(0, 160);
+    save();
+  }
+  if (event.target.id === "name"){ state.settings.name = event.target.value; save(); }
+});
+view.addEventListener("change", (event) => {
+  if (event.target.id !== "restore-profile" || !event.target.files || !event.target.files[0]) return;
+  event.target.files[0].text().then(text => {
+    try {
+      const next = JSON.parse(text);
+      if (!next || typeof next !== "object") throw new Error("bad");
+      if (next.profile && !next.settings){ state.profile = next.profile; mine(); }
+      else if (next.settings){ Object.assign(state, next); state.settings = Object.assign({presetId:"nora"}, next.settings); mine(); book(); }
+      else throw new Error("bad");
+      save();
+      notice = "Her information is back on this phone.";
+    } catch {
+      notice = "That file is not a Speak Well backup.";
+    }
+    render();
+  });
+});
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.tab; notice = ""; render(); });
+$("#sound").addEventListener("click", (event) => {
+  const t = event.target.closest("button");
+  if (!t) return;
+  if (t.id === "sound-more"){ soundOpen = !soundOpen; renderSound(); return; }
+  if (t.id === "sound-lead"){ state.settings.leadIn = !state.settings.leadIn; save(); renderSound(); return; }
+  if (t.id === "sound-test"){ say("This is Speak Well. Can you hear me?"); return; }
+  if (t.dataset.out){
+    state.settings.output = t.dataset.out;
+    if (t.dataset.out !== "auto") soundOpen = false;
+    save();
+    applyRoute();
+    render();
+  }
+});
+$("#stop").onclick = () => { pauseNote(); speaking = ""; render(); };
+$("#home").onclick = () => { tab = "menu"; arranging = false; openTalk = ""; notice = ""; render(); };
+$("#again").onclick = () => { if (state.history[0]) say(state.history[0]); };
+document.body.addEventListener("click", (event) => {
+  const t = event.target.closest("[data-say]");
+  if (t && t.closest("footer")) say(t.dataset.say);
+});
+if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { if (tab === "more" || tab === "call") render(); };
+setInterval(checkDose, 15000);
+scheduleAlarms();
+if (navigator.serviceWorker){
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (!event.data || event.data.type !== 'speak-alarm') return;
+    speakAlarm(event.data.line);
+    notice = event.data.line;
+    render();
+  });
+}
+const alarmQuery = new URLSearchParams(location.search).get('alarm');
+if (alarmQuery) speakAlarm(alarmQuery);
+if (navigator.audioSession && navigator.audioSession.addEventListener) {
+  navigator.audioSession.addEventListener("statechange", () => {
+    const next = navigator.audioSession.state === "interrupted";
+    if (next === detectedCall) return;
+    detectedCall = next;
+    if ((state.settings.output || "auto") === "auto") notice = next ? "A call took over the sound. Phone call is on." : "Sound is back on the speaker.";
+    applyRoute();
+    render();
+  });
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  resumeVoice();
+  applyRoute();
+});
+window.addEventListener("pageshow", () => { resumeVoice(); applyRoute(); });
+applyRoute();
+render();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
-  "name": "SteadyVoice",
-  "short_name": "SteadyVoice",
+  "name": "Speak Well",
+  "short_name": "Speak Well",
   "description": "Tap a phrase. The phone speaks it, on a call or in a text.",
   "start_url": "./",
   "scope": "./",

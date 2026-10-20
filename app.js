@@ -178,7 +178,7 @@ function stopSpeech() {
 function speak(text) {
   const clean = text.trim();
   if (!clean || !window.speechSynthesis) {
-    notice("This browser cannot speak. Open SteadyVoice in Chrome.");
+    notice("This browser cannot speak. Open Speak Well in Chrome.");
     return;
   }
   stopSpeech();
@@ -405,7 +405,7 @@ function moreHtml() {
       ["look", "Look and reach", "Colors, type size, stronger side"],
       ["voice", "Voice", "Speed, pitch, and which voice speaks"],
       ["backup", "Backup", "Save phrases or move them to another phone"],
-      ["install", "Install on her phone", "Add SteadyVoice to the Android home screen"],
+      ["install", "Install on her phone", "Add Speak Well to the Android home screen"],
     ];
     return `<h2 class="sv-h">More</h2><div class="sv-menu">${rows
       .map(
@@ -515,8 +515,8 @@ function moreHtml() {
       ${ui.notice ? `<p class="sv-note">${esc(ui.notice)}</p>` : ""}`;
   }
   return `${back}<h2 class="sv-h">Install on Android</h2>
-    <p class="sv-lead">No Play Store. Chrome can put SteadyVoice on the home screen. It keeps working offline after that.</p>
-    <ol class="sv-lead"><li>Open this link in Chrome.</li><li>Tap the three-dot menu.</li><li>Tap Install app, or Add to Home screen.</li><li>Open SteadyVoice from the home screen.</li></ol>
+    <p class="sv-lead">No Play Store. Chrome can put Speak Well on the home screen. It keeps working offline after that.</p>
+    <ol class="sv-lead"><li>Open this link in Chrome.</li><li>Tap the three-dot menu.</li><li>Tap Install app, or Add to Home screen.</li><li>Open Speak Well from the home screen.</li></ol>
     <p class="sv-note">${esc(INSTALL_URL)}</p>
     <button type="button" class="sv-primary" data-act="copy">Copy install link</button>
     ${ui.notice ? `<p class="sv-note">${esc(ui.notice)}</p>` : ""}`;
@@ -570,7 +570,7 @@ function shell(main) {
         `<button type="button" class="sv-navbtn${ui.view === id ? " is-on" : ""}" data-act="nav" data-id="${id}">${label}</button>`,
     )
     .join("");
-  return `<header class="sv-header"><p class="sv-brand">SteadyVoice</p><button type="button" class="sv-again" data-act="again" ${againDisabled}>Again</button></header>
+  return `<header class="sv-header"><p class="sv-brand">Speak Well</p><button type="button" class="sv-again" data-act="again" ${againDisabled}>Again</button></header>
     <main class="sv-main">${main}</main>${live}${confirm}${quick}<nav class="sv-nav">${nav}</nav>${editorHtml()}
     <p class="sv-sr" aria-live="polite">${esc(ui.speaking || ui.notice)}</p>`;
 }
@@ -872,7 +872,7 @@ document.body.addEventListener("click", (event) => {
     return;
   }
   if (act === "export") {
-    const blob = new Blob([JSON.stringify({ app: "SteadyVoice", version: 1, ...state })], { type: "application/json" });
+    const blob = new Blob([JSON.stringify({ app: "Speak Well", version: 1, ...state })], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;

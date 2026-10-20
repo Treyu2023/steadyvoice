@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3eee6">
 <link rel="manifest" href="manifest.webmanifest">
-<title>SteadyVoice</title>
+<title>Speak Well</title>
 <style>
   :root { color-scheme: light; --paper:#f3eee6; --ink:#1c1916; --card:#fffdf9; --line:#e4d9cc; --muted:#6d645b; --teal:#0e6b62; --soft:#e5f3f1; --rose:#8e2f2f; --rose-soft:#f8e8e4; --on:#f3fffc; }
   * { box-sizing: border-box; }
@@ -63,7 +63,7 @@
   <div class="row">
     <div>
       <button id="home" class="ghost" type="button" style="display:none;margin-bottom:.4rem">Home</button>
-      <p class="kicker">SteadyVoice</p>
+      <p class="kicker">Speak Well</p>
       <h1 id="title">Home</h1>
     </div>
   </div>
@@ -500,8 +500,8 @@ const LINES = {
   "i feel sick to my stomach.": { es: "Tengo náuseas.", it: "Ho la nausea.", fr: "J'ai mal au cœur.", zh: "我恶心。", ja: "吐き気がします。" },
   "i have a headache.": { es: "Me duele la cabeza.", it: "Ho mal di testa.", fr: "J'ai mal à la tête.", zh: "我头疼。", ja: "頭が痛いです。" },
   "i will point to where it hurts.": { es: "Señalaré dónde me duele.", it: "Indicherò dove mi fa male.", fr: "Je vais montrer où j'ai mal.", zh: "我会指出哪里疼。", ja: "痛いところを指さします。" },
-  "this is steadyvoice. can you hear me?": { es: "Soy SteadyVoice. ¿Me oyes?", it: "Sono SteadyVoice. Mi senti?", fr: "C'est SteadyVoice. Vous m'entendez ?", zh: "我是 SteadyVoice。你听得见吗？", ja: "SteadyVoiceです。聞こえますか？" },
-  "can you hear me? i am using steadyvoice because i cannot speak.": { es: "¿Me oyes? Uso SteadyVoice porque no puedo hablar.", it: "Mi senti? Uso SteadyVoice perché non posso parlare.", fr: "Vous m'entendez ? J'utilise SteadyVoice parce que je ne peux pas parler.", zh: "你听得见吗？我用 SteadyVoice，因为我不能说话。", ja: "聞こえますか？話せないので SteadyVoice を使っています。" },
+  "this is steadyvoice. can you hear me?": { es: "Soy Speak Well. ¿Me oyes?", it: "Sono Speak Well. Mi senti?", fr: "C'est Speak Well. Vous m'entendez ?", zh: "我是 Speak Well。你听得见吗？", ja: "Speak Wellです。聞こえますか？" },
+  "can you hear me? i am using steadyvoice because i cannot speak.": { es: "¿Me oyes? Uso Speak Well porque no puedo hablar.", it: "Mi senti? Uso Speak Well perché non posso parlare.", fr: "Vous m'entendez ? J'utilise Speak Well parce que je ne peux pas parler.", zh: "你听得见吗？我用 Speak Well，因为我不能说话。", ja: "聞こえますか？話せないので Speak Well を使っています。" },
 };
 const LANGS = [["en","English"],["es","Spanish"],["it","Italian"],["fr","French"],["zh","Chinese"],["ja","Japanese"]];
 const BCP = {en:"en-US", es:"es-ES", it:"it-IT", fr:"fr-FR", zh:"zh-CN", ja:"ja-JP"};
@@ -666,7 +666,7 @@ function about(){
     <div class="chips">${says}</div>
     ${fold("who", "Who I am", box("preferred", "What people call me", "First name") + box("fullName", "Full name", "First and last") + box("birth", "Date of birth", "Month day, year") + box("phone", "Phone", "Her number") + box("email", "Email", "name@email.com") + box("hobbies", "Hobbies", "Gardening, music") + box("color", "Favorite color", "Blue"))}
     ${fold("home", "Home, car, and license", box("address", "Street address", "123 Main Street") + box("city", "City and state", "Town, state") + box("license", "Driver's license number", "License number") + box("plate", "License plate", "ABC-1234") + box("vehicle", "Car", "Blue Honda, 2014"))}
-    ${fold("health", "Health", `<p class="kicker">Diabetic?</p><div class="grid" style="grid-template-columns:1fr 1fr 1fr">${["yes","Yes","no","No","unsure","Not sure"].reduce((html, item, index, all) => index % 2 ? html + `<button class="${p.diabetic===all[index-1]?"ink":"ghost"}" data-diabetic="${all[index-1]}" type="button">${item}</button>` : html, "")}</div>` + box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + `<p><b>Medicine alarm</b></p><p class="muted">Add a medicine and a time. The phone rings, vibrates, and says the name while SteadyVoice is open.</p><input id="med-name" placeholder="Medicine name"><input id="med-amount" placeholder="Amount, like 10 mg"><input id="med-time" type="time" value="08:00"><button class="wide ink" id="add-dose" type="button">Add this medicine</button><button class="wide ghost" id="allow-alerts" type="button">Allow phone alerts</button>` + (p.doses || []).map(dose => `<div class="card"><b>${esc(dose.name || "")}</b> ${esc(dose.amount || "")}<p class="muted">${esc((dose.times || []).join(", ") || "No time yet")}</p><button class="ghost" data-dose-sound="${esc(dose.id)}" type="button">${dose.sound === false ? "Ringtone off" : "Ringtone on"}</button><button class="ghost" data-dose-vibrate="${esc(dose.id)}" type="button">${dose.vibrate === false ? "Vibrate off" : "Vibrate on"}</button><button class="wide ghost" data-test-dose="${esc(dose.id)}" type="button">Test alarm</button><button class="wide ghost" data-drop-dose="${esc(dose.id)}" type="button">Remove</button></div>`).join("") + box("medicines", "Other medicine notes", "Anything the alarm does not cover") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
+    ${fold("health", "Health", `<p class="kicker">Diabetic?</p><div class="grid" style="grid-template-columns:1fr 1fr 1fr">${["yes","Yes","no","No","unsure","Not sure"].reduce((html, item, index, all) => index % 2 ? html + `<button class="${p.diabetic===all[index-1]?"ink":"ghost"}" data-diabetic="${all[index-1]}" type="button">${item}</button>` : html, "")}</div>` + box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + `<p><b>Medicine alarm</b></p><p class="muted">Add a name, an amount, and a time. Allow alerts, then install Speak Well. The phone can ring after the app is closed. Tap the alert and it says the medicine twice.</p><input id="med-name" placeholder="Medicine name"><input id="med-amount" placeholder="Amount, like 10 mg"><input id="med-time" type="time" value="08:00"><button class="wide ink" id="add-dose" type="button">Add this medicine</button><button class="wide ghost" id="allow-alerts" type="button">Allow phone alerts</button>` + (p.doses || []).map(dose => `<div class="card"><b>${esc(dose.name || "")}</b> ${esc(dose.amount || "")}<p class="muted">${esc((dose.times || []).join(", ") || "No time yet")}</p><button class="ghost" data-dose-sound="${esc(dose.id)}" type="button">${dose.sound === false ? "Ringtone off" : "Ringtone on"}</button><button class="ghost" data-dose-vibrate="${esc(dose.id)}" type="button">${dose.vibrate === false ? "Vibrate off" : "Vibrate on"}</button><button class="wide ghost" data-test-dose="${esc(dose.id)}" type="button">Test alarm</button><button class="wide ghost" data-drop-dose="${esc(dose.id)}" type="button">Remove</button></div>`).join("") + box("medicines", "Other medicine notes", "Anything the alarm does not cover") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
     ${fold("people", "People", box("emergencyName", "Emergency contact", "Name") + box("emergencyRelation", "Who they are", "Sister, neighbor") + box("emergencyPhone", "Their phone", "Number") + people + `<button class="wide ink" id="add-person" type="button">Add a person</button>`)}
     ${fold("remember", "Remember for later", `<p class="muted">Short things. Appointments, where the car is, what she meant to say.</p><div class="row"><input id="memory" placeholder="Remember…"><button class="ink" id="add-memory" type="button">Save</button></div>${memories}`)}
     <button class="wide ink" id="save-profile" type="button">Save a copy of my information</button>
@@ -726,6 +726,45 @@ function markDose(id, time){
   next[id + "@" + time + "@" + day] = 1;
   try { localStorage.setItem("steadyvoice.dose.fired", JSON.stringify(next)); } catch (error) {}
 }
+
+function doseLine(dose){ return "Time to take " + dose.name + (dose.amount ? ", " + dose.amount : "") + "."; }
+function speakAlarm(line){
+  if (!line || !window.speechSynthesis) return;
+  startRing(true);
+  const once = () => {
+    const utter = new SpeechSynthesisUtterance(line);
+    utter.rate = 0.9;
+    return utter;
+  };
+  const first = once();
+  first.onend = () => speechSynthesis.speak(once());
+  speechSynthesis.cancel();
+  speechSynthesis.speak(first);
+}
+function nextStamp(hhmm){
+  const parts = String(hhmm || "00:00").split(":");
+  const when = new Date();
+  when.setHours(Number(parts[0]) || 0, Number(parts[1]) || 0, 0, 0);
+  if (when.getTime() <= Date.now() + 20000) when.setDate(when.getDate() + 1);
+  return when.getTime();
+}
+function scheduleAlarms(){
+  if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
+  const alarms = [];
+  (mine().doses || []).forEach(dose => {
+    if (!dose.name || !dose.times) return;
+    dose.times.forEach(time => alarms.push({
+      id: dose.id, time, when: nextStamp(time),
+      title: "Time for " + dose.name,
+      body: doseLine(dose),
+      line: doseLine(dose),
+      vibrate: dose.vibrate !== false
+    }));
+  });
+  navigator.serviceWorker.register("./sw.js").then(() => navigator.serviceWorker.ready).then(reg => {
+    if (reg.active) reg.active.postMessage({ type: "schedule", alarms });
+  }).catch(() => {});
+}
 function checkDose(){
   const hit = findDue();
   if (!hit){
@@ -736,12 +775,32 @@ function checkDose(){
   due = hit;
   if (rangToken === token) return;
   rangToken = token;
-  if (hit.dose.sound !== false) startRing(hit.dose.vibrate !== false);
-  else if (hit.dose.vibrate !== false && navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 700]);
-  if (window.Notification && Notification.permission === "granted"){
-    try { new Notification("Medicine", { body: "Time to take " + hit.dose.name }); } catch (error) {}
+  const line = doseLine(hit.dose);
+  if (hit.dose.sound !== false) speakAlarm(line);
+  else if (window.speechSynthesis){
+    const utter = new SpeechSynthesisUtterance(line);
+    utter.rate = 0.9;
+    utter.onend = () => speechSynthesis.speak(new SpeechSynthesisUtterance(line));
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+    if (hit.dose.vibrate !== false && navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 700]);
   }
-  say("Time to take " + hit.dose.name + (hit.dose.amount ? ", " + hit.dose.amount : "") + ".");
+  if (navigator.serviceWorker){
+    navigator.serviceWorker.ready.then(reg => reg.showNotification("Time for " + hit.dose.name, {
+      body: line, tag: "speakwell-now-" + hit.dose.id, renotify: true, requireInteraction: true,
+      vibrate: hit.dose.vibrate === false ? undefined : [500, 200, 500, 200, 800],
+      data: { line }
+    })).catch(() => {});
+  }
+}
+
+function helpPage(){
+  return `<p>Speak Well talks when she taps a button. Nothing she types is uploaded.</p>
+    <div class="card"><b>Put it on the phone</b><p>Open the link in Chrome. Tap the three dots. Tap Install app, or Add to Home screen. Next time, tap the Speak Well icon.</p></div>
+    <div class="card"><b>Medicine alarm</b><p>About me, then Health. Add the name, the amount, and the time. Tap Allow phone alerts. Install the app. The phone can ring, vibrate, and show the alert after Speak Well is closed. Tap the alert and it says the medicine out loud, twice. I took it stops it for that time today.</p></div>
+    <div class="card"><b>On a call</b><p>Tap Phone call at the top. On the phone's call screen, tap Speaker. Hold the phone a little away. The other person hears her through the microphone.</p></div>
+    <div class="card"><b>If the app is reinstalled</b><p>About me, Save a copy of my information. Later, Put my information back and choose that file.</p></div>
+    <button class="wide ink" data-go="guide" type="button">Show me how</button>`;
 }
 function render(){
   document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
@@ -755,26 +814,29 @@ function render(){
   if (home) home.style.display = tab === "menu" ? "none" : "";
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
-  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "more" ? "Voices and look" : "Say a phrase";
+  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "help" ? "Help" : tab === "more" ? "Voices and look" : "Say a phrase";
   const slot = noteNow();
   const lines = scriptLines(slot.body);
   const at = Math.min(slot.place || 0, lines.length);
   const waiting = tab !== "notes" && lines.length && (noteReading || (at > 0 && at < lines.length));
   const waitBar = waiting ? `<div class="card" style="display:flex;gap:.4rem;align-items:center"><button class="wide ghost" data-go="notes" type="button" style="flex:1;text-align:left"><b>${esc(slot.title)}</b><br><span class="muted">${noteReading ? "Speaking line " + (at + 1) + " of " + lines.length : "Paused at line " + (at + 1) + " of " + lines.length}</span></button><button class="teal" id="note-bar" type="button">${noteReading ? "Pause" : "Continue"}</button></div>` : "";
   const doseBar = due ? `<div class="card"><b>Time for ${esc(due.dose.name)}</b><p>${esc([due.dose.amount, due.time].filter(Boolean).join(" · "))}</p><button class="wide ink" id="took-dose" type="button">I took it</button><button class="wide ghost" id="stop-dose" type="button">Stop alarm</button></div>` : "";
-  const banner = doseBar + waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close SteadyVoice.</p>` : "");
+  const banner = doseBar + waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close Speak Well.</p>` : "");
   const steps = [
-    "Tap a phrase. This phone says it for you.",
-    "Speaker is for people in the room. Phone call is for someone on the phone.",
-    "If the words are not on a button, type them, then tap Say it. Words she has said before will be offered.",
-    "Tap Home to come back here. Tap Stop if the voice should be quiet."
+    "Tap a phrase. Speak Well says it out loud.",
+    "Speaker is for people in the room. Phone call is for someone on the phone. Then tap Speaker on the phone's call screen.",
+    "If the words are not on a button, type them, then tap Say it.",
+    "About me stores her address, people, hobbies, and medicines. Typing my address offers the real words.",
+    "Add a medicine and a time. Tap Allow phone alerts. Install Speak Well so the alarm can ring after the app is closed. Tap the alert. Speak Well says the medicine twice.",
+    "Tap Home to come back. Tap Stop if the voice should be quiet. Help is on the home screen if you need the steps again."
   ];
-  const guide = guideOn ? `<div class="card" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:8"><p class="kicker">Step ${guideStep + 1} of 4</p><p style="font-size:1.2rem;font-weight:650">${esc(steps[guideStep] || "")}</p><button class="wide teal" id="guide-next" type="button">${guideStep >= 3 ? "Done" : "Next"}</button><button class="wide ghost" id="guide-skip" type="button">Skip</button></div>` : "";
+  const guide = guideOn ? `<div class="card" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:8"><p class="kicker">Step ${guideStep + 1} of ${steps.length}</p><p style="font-size:1.2rem;font-weight:650">${esc(steps[guideStep] || "")}</p><button class="wide teal" id="guide-next" type="button">${guideStep >= steps.length - 1 ? "Done" : "Next"}</button><button class="wide ghost" id="guide-skip" type="button">Skip</button></div>` : "";
   if (tab === "menu") view.innerHTML = banner + menu() + guide;
   else if (tab === "board") view.innerHTML = banner + board() + guide;
   else if (tab === "say") view.innerHTML = banner + typer() + guide;
   else if (tab === "notes") view.innerHTML = banner + notepad() + guide;
   else if (tab === "about") view.innerHTML = banner + about() + guide;
+  else if (tab === "help") view.innerHTML = banner + helpPage() + guide;
   else if (tab === "call") view.innerHTML = banner + call() + guide;
   else view.innerHTML = banner + more() + guide;
   if (tab === "say") bindComposer();
@@ -835,10 +897,11 @@ function menu(){
     ["call", "Phone call", "So the person on the line can hear her."],
     ["talks", "Conversations", "Open an earlier talk and say it again."],
     ["more", "Voices and look", "Change the voice, the size, or the dark screen."],
-    ["guide", "Show me how", "Four short steps. You can come back anytime."]
+    ["help", "Help", "Setup, medicine alarms, and how to put it on the phone."],
+    ["guide", "Show me how", "A short walk-through. You can come back anytime."]
   ];
   const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-  const setup = installed ? "" : `<div class="card"><b>Put this on the phone</b><p>In Chrome, tap the three dots. Tap Install app, or Add to Home screen. Open SteadyVoice from that icon next time.</p></div>`;
+  const setup = installed ? "" : `<div class="card"><b>Put this on the phone</b><p>In Chrome, tap the three dots. Tap Install app, or Add to Home screen. Open Speak Well from that icon next time. Then tap Allow phone alerts so medicine alarms can ring after the app is closed.</p></div>`;
   return setup + rows.map(row => `<button class="wide" data-go="${row[0]}" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>${row[1]}</b><br><span class="muted">${row[2]}</span></button>`).join("")
     + `<button class="wide ghost" data-go="emergency" type="button" style="display:block;width:100%;text-align:left;margin-top:1rem"><b>Emergency</b><br><span class="muted">Only if she needs help right now.</span></button>`;
 }
@@ -938,7 +1001,7 @@ function typer(){
 function call(){
   return `<div class="card"><h2 style="margin:.1rem 0 .4rem">So the other person can hear her</h2>
     <p>Tap Phone call at the top. On the call screen, tap Speaker, turn the volume up, and hold the phone a little away. She is heard through the microphone.</p></div>
-    <button class="wide teal" data-speak="Can you hear me? I am using SteadyVoice because I cannot speak." type="button">Test: Can you hear me?</button>
+    <button class="wide teal" data-speak="Can you hear me? I am using Speak Well because I cannot speak." type="button">Test: Can you hear me?</button>
     <div class="grid" style="margin-top:.7rem">${phrases().filter(p => p.id !== "emergency" && p.id !== "911").slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>
     ${fold("call", "Call options", `<button class="wide ghost" id="lead" type="button">${state.settings.leadIn ? "Starts with Please listen" : "Phrase only"}</button><div class="voices" style="margin-top:.5rem">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b></button>`).join("")}</div>`)}`;
 }
@@ -1028,9 +1091,9 @@ view.addEventListener("click", (event) => {
     const profile = mine();
     profile.doses.push({id:"dose-" + Date.now(), name:name.trim().slice(0, 60), amount:amount.trim().slice(0, 40), times:[time], sound:true, vibrate:true});
     profile.doses = profile.doses.slice(0, 12);
-    save(); render(); return;
+    save(); scheduleAlarms(); render(); return;
   }
-  if (t.id === "allow-alerts" && window.Notification){ Notification.requestPermission(); return; }
+  if (t.id === "allow-alerts" && window.Notification){ Notification.requestPermission().then(() => scheduleAlarms()); return; }
   if (t.dataset.doseSound){ const dose = mine().doses.find(item => item.id === t.dataset.doseSound); if (dose){ dose.sound = dose.sound === false; save(); render(); } return; }
   if (t.dataset.doseVibrate){ const dose = mine().doses.find(item => item.id === t.dataset.doseVibrate); if (dose){ dose.vibrate = dose.vibrate === false; save(); render(); } return; }
   if (t.dataset.testDose){ startRing(true); setTimeout(stopRing, 3500); return; }
@@ -1039,7 +1102,7 @@ view.addEventListener("click", (event) => {
     const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "steadyvoice-backup.json";
+    link.download = "speakwell-backup.json";
     link.click();
     notice = "Saved. Keep that file. It puts her information back after a reinstall.";
     render();
@@ -1064,7 +1127,7 @@ view.addEventListener("click", (event) => {
     return;
   }
   if (t.id === "guide-next"){
-    if (guideStep >= 3){ guideOn = false; state.settings.seenTutorial = true; save(); }
+    if (guideStep >= 5){ guideOn = false; state.settings.seenTutorial = true; save(); }
     else guideStep += 1;
     render();
     return;
@@ -1182,7 +1245,7 @@ view.addEventListener("change", (event) => {
       save();
       notice = "Her information is back on this phone.";
     } catch {
-      notice = "That file is not a SteadyVoice backup.";
+      notice = "That file is not a Speak Well backup.";
     }
     render();
   });
@@ -1193,7 +1256,7 @@ $("#sound").addEventListener("click", (event) => {
   if (!t) return;
   if (t.id === "sound-more"){ soundOpen = !soundOpen; renderSound(); return; }
   if (t.id === "sound-lead"){ state.settings.leadIn = !state.settings.leadIn; save(); renderSound(); return; }
-  if (t.id === "sound-test"){ say("This is SteadyVoice. Can you hear me?"); return; }
+  if (t.id === "sound-test"){ say("This is Speak Well. Can you hear me?"); return; }
   if (t.dataset.out){
     state.settings.output = t.dataset.out;
     if (t.dataset.out !== "auto") soundOpen = false;
@@ -1211,6 +1274,17 @@ document.body.addEventListener("click", (event) => {
 });
 if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { if (tab === "more" || tab === "call") render(); };
 setInterval(checkDose, 15000);
+scheduleAlarms();
+if (navigator.serviceWorker){
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (!event.data || event.data.type !== 'speak-alarm') return;
+    speakAlarm(event.data.line);
+    notice = event.data.line;
+    render();
+  });
+}
+const alarmQuery = new URLSearchParams(location.search).get('alarm');
+if (alarmQuery) speakAlarm(alarmQuery);
 if (navigator.audioSession && navigator.audioSession.addEventListener) {
   navigator.audioSession.addEventListener("statechange", () => {
     const next = navigator.audioSession.state === "interrupted";
