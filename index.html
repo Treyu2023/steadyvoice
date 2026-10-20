@@ -243,7 +243,8 @@ function typingPack(){
   };
   if (from !== "board") said.forEach(item => push(item.text));
   if (from !== "said") board.forEach(item => push(item.speak));
-  const phraseHits = (query ? lines.filter(line => line.toLowerCase().includes(query) && line.toLowerCase() !== query) : lines).slice(0, 8);
+  const mineHits = matchingFacts(query);
+  const phraseHits = mineHits.concat(query ? lines.filter(line => line.toLowerCase().includes(query) && line.toLowerCase() !== query) : lines).filter((line, index, all) => all.findIndex(item => item.toLowerCase() === line.toLowerCase()) === index).slice(0, 8);
   const counts = new Map();
   const labels = new Map();
   const note = (word, count) => {
@@ -603,6 +604,67 @@ async function say(text){
 }
 function textIt(text){ location.href = "sms:?&body=" + encodeURIComponent(text); }
 function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
+function mine(){
+  const blank = {fullName:"", preferred:"", birth:"", phone:"", email:"", address:"", city:"", license:"", plate:"", vehicle:"", blood:"", allergies:"", medicines:"", conditions:"", doctor:"", doctorPhone:"", insurance:"", memberId:"", pharmacy:"", emergencyName:"", emergencyRelation:"", emergencyPhone:"", people:[], reminders:[]};
+  if (!state.profile || typeof state.profile !== "object") state.profile = Object.assign({}, blank);
+  Object.keys(blank).forEach(key => { if (state.profile[key] == null) state.profile[key] = blank[key]; });
+  if (!Array.isArray(state.profile.people)) state.profile.people = [];
+  if (!Array.isArray(state.profile.reminders)) state.profile.reminders = [];
+  return state.profile;
+}
+function profileFacts(){
+  const p = mine();
+  const facts = [];
+  const add = (label, say, keys) => { const line = String(say || "").replace(/\s+/g, " ").trim(); if (line) facts.push({label, say: line, keys: keys.filter(Boolean)}); };
+  const called = String(p.preferred || p.fullName || "").trim();
+  if (called) add("My name", "My name is " + called + ".", ["my name", "name"]);
+  const home = [p.address, p.city].map(item => String(item || "").trim()).filter(Boolean).join(", ");
+  if (home) add("My address", "My address is " + home + ".", ["my address", "address", "where i live", "home"]);
+  if (String(p.phone || "").trim()) add("My phone", "My phone number is " + p.phone.trim() + ".", ["my phone", "phone", "phone number"]);
+  if (String(p.email || "").trim()) add("My email", "My email is " + p.email.trim() + ".", ["email", "my email"]);
+  if (String(p.birth || "").trim()) add("Birthday", "My date of birth is " + p.birth.trim() + ".", ["birthday", "date of birth", "born"]);
+  if (String(p.license || "").trim()) add("Driver license", "My driver's license number is " + p.license.trim() + ".", ["license", "driver", "my license", "drivers license"]);
+  if (String(p.plate || "").trim()) add("License plate", "My license plate is " + p.plate.trim() + ".", ["plate", "license plate", "my plate"]);
+  if (String(p.vehicle || "").trim()) add("My car", "My vehicle is " + p.vehicle.trim() + ".", ["car", "vehicle", "my car"]);
+  if (String(p.blood || "").trim()) add("Blood type", "My blood type is " + p.blood.trim() + ".", ["blood", "blood type"]);
+  if (String(p.allergies || "").trim()) add("Allergies", "My allergies are " + p.allergies.trim() + ".", ["allergy", "allergies"]);
+  if (String(p.medicines || "").trim()) add("Medicines", "My medicines are " + p.medicines.trim() + ".", ["medicine", "medicines", "medication"]);
+  if (String(p.conditions || "").trim()) add("Health", "Please know this about my health. " + p.conditions.trim(), ["health", "condition"]);
+  if (String(p.doctor || "").trim() || String(p.doctorPhone || "").trim()) add("My doctor", "My doctor is " + [p.doctor, p.doctorPhone].map(item => String(item || "").trim()).filter(Boolean).join(", ") + ".", ["doctor", "my doctor"]);
+  if (String(p.pharmacy || "").trim()) add("Pharmacy", "My pharmacy is " + p.pharmacy.trim() + ".", ["pharmacy"]);
+  if (String(p.insurance || "").trim() || String(p.memberId || "").trim()) add("Insurance", "My insurance is " + (String(p.insurance || "").trim() || "on file") + (String(p.memberId || "").trim() ? ". The member number is " + p.memberId.trim() : "") + ".", ["insurance", "member"]);
+  if (String(p.emergencyName || "").trim() || String(p.emergencyPhone || "").trim()) add("Emergency contact", "In an emergency, call " + (String(p.emergencyName || "").trim() || "my contact") + (String(p.emergencyPhone || "").trim() ? " at " + p.emergencyPhone.trim() : "") + ".", ["emergency contact"]);
+  (p.people || []).forEach(person => {
+    const name = String(person.name || "").trim();
+    const relation = String(person.relation || "").trim();
+    if (!name && !relation) return;
+    const line = relation && name ? "My " + relation + " is " + name + "." : name ? "This is " + name + "." : "My " + relation + ".";
+    add(name || relation, line + (person.note ? " " + String(person.note).trim() : ""), [name.toLowerCase(), relation.toLowerCase(), relation ? "my " + relation.toLowerCase() : ""]);
+  });
+  return facts;
+}
+function matchingFacts(query){
+  const needle = String(query || "").trim().toLowerCase();
+  if (needle.length < 2) return [];
+  return profileFacts().filter(fact => fact.keys.some(key => key && (key.startsWith(needle) || needle.startsWith(key) || (needle.length >= 3 && key.includes(needle))))).slice(0, 4).map(fact => fact.say);
+}
+function about(){
+  const p = mine();
+  const box = (key, label, placeholder) => `<label>${label}<input data-field="${key}" value="${esc(p[key] || "")}" placeholder="${esc(placeholder)}"></label>`;
+  const says = profileFacts().map((fact, index) => `<button class="chip" data-fact="${index}" type="button">Say ${esc(fact.label)}</button>`).join("");
+  const people = (p.people || []).map(person => `<div class="card"><input data-person="${esc(person.id)}" data-part="name" value="${esc(person.name || "")}" placeholder="Name, like Alice"><input data-person="${esc(person.id)}" data-part="relation" value="${esc(person.relation || "")}" placeholder="Who, like Daughter"><input data-person="${esc(person.id)}" data-part="note" value="${esc(person.note || "")}" placeholder="A detail to remember"><button class="wide ghost" data-drop-person="${esc(person.id)}" type="button">Remove</button></div>`).join("");
+  const memories = (p.reminders || []).map(item => `<div class="row"><button class="wide ghost" data-memory="${esc(item.id)}" type="button">${esc(item.text)}</button><button class="ghost" data-drop-memory="${esc(item.id)}" type="button">Delete</button></div>`).join("");
+  return `<p class="muted">Fill this in once. On Type a sentence, my address, my license, or a person's name offers the real words. This stays on the phone. Save a copy so a reinstall can put it back. Do not store a Social Security number.</p>
+    <div class="chips">${says}</div>
+    ${fold("who", "Who I am", box("preferred", "What people call me", "First name") + box("fullName", "Full name", "First and last") + box("birth", "Date of birth", "Month day, year") + box("phone", "Phone", "Her number") + box("email", "Email", "name@email.com"))}
+    ${fold("home", "Home, car, and license", box("address", "Street address", "123 Main Street") + box("city", "City and state", "Town, state") + box("license", "Driver's license number", "License number") + box("plate", "License plate", "ABC-1234") + box("vehicle", "Car", "Blue Honda, 2014"))}
+    ${fold("health", "Health", box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + box("medicines", "Medicines", "Names and when") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
+    ${fold("people", "People", box("emergencyName", "Emergency contact", "Name") + box("emergencyRelation", "Who they are", "Sister, neighbor") + box("emergencyPhone", "Their phone", "Number") + people + `<button class="wide ink" id="add-person" type="button">Add a person</button>`)}
+    ${fold("remember", "Remember for later", `<p class="muted">Short things. Appointments, where the car is, what she meant to say.</p><div class="row"><input id="memory" placeholder="Remember…"><button class="ink" id="add-memory" type="button">Save</button></div>${memories}`)}
+    <button class="wide ink" id="save-profile" type="button">Save a copy of my information</button>
+    <label class="wide ghost" style="display:flex;align-items:center;justify-content:center">Put my information back<input id="restore-profile" type="file" accept="application/json" style="display:none"></label>`;
+}
+
 function render(){
   document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
   renderSound();
@@ -615,7 +677,7 @@ function render(){
   if (home) home.style.display = tab === "menu" ? "none" : "";
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
-  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "more" ? "Voices and look" : "Say a phrase";
+  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "more" ? "Voices and look" : "Say a phrase";
   const slot = noteNow();
   const lines = scriptLines(slot.body);
   const at = Math.min(slot.place || 0, lines.length);
@@ -633,6 +695,7 @@ function render(){
   else if (tab === "board") view.innerHTML = banner + board() + guide;
   else if (tab === "say") view.innerHTML = banner + typer() + guide;
   else if (tab === "notes") view.innerHTML = banner + notepad() + guide;
+  else if (tab === "about") view.innerHTML = banner + about() + guide;
   else if (tab === "call") view.innerHTML = banner + call() + guide;
   else view.innerHTML = banner + more() + guide;
   if (tab === "say") bindComposer();
@@ -689,6 +752,7 @@ function menu(){
     ["board", "Say a phrase", "Tap a button. The phone says the whole sentence."],
     ["say", "Type a sentence", "Write words that are not on a button."],
   ["notes", "Notepad", "Write it ahead. Pause, then pick up the same line."],
+  ["about", "About me", "Address, license, people, and things to remember."],
     ["call", "Phone call", "So the person on the line can hear her."],
     ["talks", "Conversations", "Open an earlier talk and say it again."],
     ["more", "Voices and look", "Change the voice, the size, or the dark screen."],
@@ -854,6 +918,35 @@ view.addEventListener("click", (event) => {
   if (t.id === "note-restart"){ pauseNote(); noteNow().place = 0; save(); readNote(0); return; }
   if (t.dataset.slot){ pauseNote(); book().active = t.dataset.slot; save(); render(); return; }
   if (t.dataset.jump){ readNote(Number(t.dataset.jump)); return; }
+  if (t.dataset.fact){ const fact = profileFacts()[Number(t.dataset.fact)]; if (fact) say(fact.say); return; }
+  if (t.id === "add-person"){
+    const profile = mine();
+    if (profile.people.length >= 8) return;
+    profile.people.push({id:"person-"+Date.now(), name:"", relation:"", note:""});
+    save(); render(); return;
+  }
+  if (t.dataset.dropPerson){ const profile = mine(); profile.people = profile.people.filter(person => person.id !== t.dataset.dropPerson); save(); render(); return; }
+  if (t.id === "add-memory"){
+    const box = document.getElementById("memory");
+    const text = box ? box.value.trim() : "";
+    if (!text) return;
+    const profile = mine();
+    profile.reminders.unshift({id:"memory-"+Date.now(), text:text.slice(0, 240), at:Date.now()});
+    profile.reminders = profile.reminders.slice(0, 30);
+    save(); render(); return;
+  }
+  if (t.dataset.memory){ const item = mine().reminders.find(row => row.id === t.dataset.memory); if (item) say(item.text); return; }
+  if (t.dataset.dropMemory){ const profile = mine(); profile.reminders = profile.reminders.filter(row => row.id !== t.dataset.dropMemory); save(); render(); return; }
+  if (t.id === "save-profile"){
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "steadyvoice-backup.json";
+    link.click();
+    notice = "Saved. Keep that file. It puts her information back after a reinstall.";
+    render();
+    return;
+  }
   if (t.dataset.suggest){
     const suggestion = t.dataset.suggest;
     const kind = t.dataset.kind || "word";
@@ -964,7 +1057,37 @@ view.addEventListener("input", (event) => {
     save();
     paintNote();
   }
+  if (event.target.dataset.field){
+    mine()[event.target.dataset.field] = event.target.value.slice(0, 240);
+    if (event.target.dataset.field === "preferred" || event.target.dataset.field === "fullName"){
+      const profile = mine();
+      state.settings.name = (profile.preferred || profile.fullName || "").trim();
+    }
+    save();
+  }
+  if (event.target.dataset.person){
+    const person = mine().people.find(item => item.id === event.target.dataset.person);
+    if (person) person[event.target.dataset.part] = event.target.value.slice(0, 160);
+    save();
+  }
   if (event.target.id === "name"){ state.settings.name = event.target.value; save(); }
+});
+view.addEventListener("change", (event) => {
+  if (event.target.id !== "restore-profile" || !event.target.files || !event.target.files[0]) return;
+  event.target.files[0].text().then(text => {
+    try {
+      const next = JSON.parse(text);
+      if (!next || typeof next !== "object") throw new Error("bad");
+      if (next.profile && !next.settings){ state.profile = next.profile; mine(); }
+      else if (next.settings){ Object.assign(state, next); state.settings = Object.assign({presetId:"nora"}, next.settings); mine(); book(); }
+      else throw new Error("bad");
+      save();
+      notice = "Her information is back on this phone.";
+    } catch {
+      notice = "That file is not a SteadyVoice backup.";
+    }
+    render();
+  });
 });
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.tab; notice = ""; render(); });
 $("#sound").addEventListener("click", (event) => {
