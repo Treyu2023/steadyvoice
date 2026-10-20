@@ -1,7 +1,6 @@
 $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$page = Join-Path $here "SpeakWell.html"
-if (-not (Test-Path -LiteralPath $page)) { $page = Join-Path $here "SteadyVoice.html" }
+$page = Join-Path $here "index.html"
 
 function Show-Problem($message) {
   Add-Type -AssemblyName System.Windows.Forms
@@ -9,7 +8,7 @@ function Show-Problem($message) {
 }
 
 if (-not (Test-Path -LiteralPath $page)) {
-  Show-Problem "SpeakWell.html is not in this folder.`r`n`r`nUnzip the whole zip. Do not move this starter by itself."
+  Show-Problem "index.html is not in this folder.`r`n`r`nUnzip the whole zip. Do not move this starter by itself."
   exit 1
 }
 

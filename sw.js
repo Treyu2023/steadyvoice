@@ -1,5 +1,5 @@
-const CACHE = "speakwell-5";
-const ASSETS = ["./", "./index.html", "./SpeakWell.html", "./SteadyVoice.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+const CACHE = "speakwell-6";
+const ASSETS = ["./", "./index.html", "./SpeakWell.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS).catch(() => undefined)));
