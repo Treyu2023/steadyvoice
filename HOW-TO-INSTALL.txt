@@ -36,7 +36,8 @@ Conversations
 
 Voices and look
   The screen starts dark.
-  She can make it light, change the size, or pick a woman's or a man's voice.
+  Notepad keeps three notes on the phone. She can write a conversation ahead of time,
+  speak it, pause on a line, use another button, then continue where she stopped.
   Speed and pitch are on Type a sentence. Free high-quality voices come from the phone:
   Android Settings, search Text-to-speech, Google Text-to-speech, Install voice data.
   iPhone Settings, Accessibility, Spoken Content, Voices.

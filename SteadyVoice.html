@@ -268,6 +268,110 @@ function load(){
   catch { return blank; }
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} }
+let noteGen = 0, noteReading = false, noteMark = 0;
+function book(){
+  const fresh = [
+    {id:"1", title:"Slot 1", body:"", place:0},
+    {id:"2", title:"Slot 2", body:"", place:0},
+    {id:"3", title:"Slot 3", body:"", place:0}
+  ];
+  const old = state.notes && Array.isArray(state.notes.slots) ? state.notes.slots : [];
+  if (!state.notes || old.length < 3){
+    state.notes = { active: state.notes && (state.notes.active === "2" || state.notes.active === "3") ? state.notes.active : "1", slots: fresh.map(slot => {
+      const found = old.find(item => item && item.id === slot.id);
+      if (!found) return slot;
+      return { id: slot.id, title: String(found.title || slot.title).slice(0, 40), body: String(found.body || "").slice(0, 8000), place: Math.max(0, Math.floor(Number(found.place) || 0)) };
+    }) };
+  }
+  return state.notes;
+}
+function noteNow(){ const notes = book(); return notes.slots.find(slot => slot.id === notes.active) || notes.slots[0]; }
+function scriptLines(body){ return String(body || "").split(/\n+|(?<=[.!?])\s+/).map(line => line.trim()).filter(Boolean).slice(0, 80); }
+function speakChunk(text, onMark){
+  return new Promise(async (resolve) => {
+    const lang = state.settings.outputLang || "en";
+    let spoken = text;
+    if (lang !== "en") spoken = (await translateLine(text, lang)).text;
+    if (!window.speechSynthesis) return resolve(false);
+    speechSynthesis.cancel();
+    const shaped = shape();
+    const voice = pickLangVoice(lang);
+    const utter = new SpeechSynthesisUtterance(spoken);
+    utter.lang = BCP[lang] || "en-US";
+    utter.rate = liveCall() ? Math.min(shaped.rate, 0.8) : shaped.rate;
+    utter.pitch = shaped.pitch;
+    utter.volume = 1;
+    if (voice) utter.voice = voice;
+    utter.onboundary = (event) => { if (onMark) onMark(event.charIndex || 0); };
+    utter.onend = () => resolve(true);
+    utter.onerror = () => resolve(false);
+    setTimeout(() => { speechSynthesis.resume(); speechSynthesis.speak(utter); }, 40);
+  });
+}
+function pauseNote(){ noteGen += 1; noteReading = false; if (window.speechSynthesis) speechSynthesis.cancel(); speaking = ""; }
+async function readNote(from){
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  if (!lines.length){ notice = "This note is empty."; render(); return; }
+  const mine = ++noteGen;
+  let index = from == null ? slot.place || 0 : from;
+  if (index < 0 || index >= lines.length) index = 0;
+  noteReading = true;
+  applyRoute();
+  for (let i = index; i < lines.length; i += 1){
+    if (mine !== noteGen){ noteReading = false; return; }
+    slot.place = i;
+    noteMark = 0;
+    save();
+    const here = document.getElementById("note-here");
+    if (here || document.getElementById("note-go")) paintNote();
+    else render();
+    const ok = await speakChunk(lines[i], (at) => {
+      if (mine !== noteGen) return;
+      noteMark = at;
+      const live = document.getElementById("note-here");
+      if (live) live.textContent = lines[i].slice(0, at) + " | " + lines[i].slice(at);
+    });
+    if (!ok || mine !== noteGen){ noteReading = false; if (mine === noteGen) speaking = ""; save(); if (document.getElementById("note-go")) paintNote(); return; }
+  }
+  slot.place = lines.length;
+  noteReading = false;
+  speaking = "";
+  notice = "That note is finished.";
+  save();
+  render();
+}
+function paintNote(){
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  const at = Math.min(slot.place || 0, lines.length);
+  const button = document.getElementById("note-go");
+  if (button) button.textContent = noteReading ? "Pause · line " + (at + 1) + " of " + lines.length : !lines.length ? "Nothing to say yet" : at >= lines.length ? "Speak from the start" : at === 0 ? "Speak this note" : "Continue · line " + (at + 1) + " of " + lines.length;
+  const here = document.getElementById("note-here");
+  const line = lines[at] || "";
+  if (here) here.textContent = noteReading ? line.slice(0, noteMark) + " | " + line.slice(noteMark) : line;
+  const box = document.getElementById("note-lines");
+  if (box) box.innerHTML = lines.map((item, index) => `<button class="wide ${index === at && at < lines.length ? "ink" : "ghost"}" data-jump="${index}" type="button" style="margin-top:.35rem"><b>${index === at && at < lines.length ? "Here" : index + 1}</b> ${esc(item)}</button>`).join("");
+}
+function notepad(){
+  const notes = book();
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  const at = Math.min(slot.place || 0, lines.length);
+  const label = noteReading ? "Pause · line " + (Math.min(at, lines.length - 1) + 1) + " of " + lines.length : !lines.length ? "Nothing to say yet" : at >= lines.length ? "Speak from the start" : at === 0 ? "Speak this note" : "Continue · line " + (at + 1) + " of " + lines.length;
+  const picks = notes.slots.map(item => `<button class="${item.id === notes.active ? "ink" : "ghost"}" data-slot="${item.id}" type="button">${esc(item.title || "Slot")}</button>`).join("");
+  const list = lines.map((item, index) => `<button class="wide ${index === at && at < lines.length ? "ink" : "ghost"}" data-jump="${index}" type="button" style="margin-top:.35rem"><b>${index === at && at < lines.length ? "Here" : index + 1}</b> ${esc(item)}</button>`).join("");
+  return `<p class="muted">Write the conversation first. The phone says it one line at a time. Pause, use another button, then continue on the same line. All three slots stay on this phone.</p>
+    <div class="grid" style="margin:.5rem 0;grid-template-columns:1fr 1fr 1fr">${picks}</div>
+    <label for="note-title">Name</label>
+    <input id="note-title" value="${esc(slot.title)}">
+    <label for="note-body">The words</label>
+    <textarea id="note-body" rows="8" placeholder="One sentence on each line works best." style="min-height:12rem">${esc(slot.body)}</textarea>
+    <button class="wide teal" id="note-go" type="button">${label}</button>
+    <p id="note-here" class="muted">${esc(lines[at] || "")}</p>
+    ${at > 0 ? `<button class="wide ghost" id="note-restart" type="button">Start over</button>` : ""}
+    <div id="note-lines">${list}</div>`;
+}
 function liveCall(){
   const output = state.settings.output || "auto";
   return output === "call" || (output === "auto" && detectedCall);
@@ -460,6 +564,7 @@ function pickLangVoice(lang){
   return pool[0] || all[0];
 }
 async function say(text){
+  pauseNote();
   const clean = text.trim();
   if (!clean || !window.speechSynthesis){ notice = "Open this file in Chrome so the phone can speak."; render(); return; }
   if (navigator.vibrate) navigator.vibrate(12);
@@ -501,7 +606,7 @@ function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
 function render(){
   document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
   renderSound();
-  const speakingScreen = tab === "board" || tab === "say" || tab === "call" || liveCall();
+  const speakingScreen = tab === "board" || tab === "say" || tab === "call" || tab === "notes" || liveCall();
   const sound = $("#sound");
   if (sound) sound.style.display = speakingScreen ? "" : "none";
   const footer = document.querySelector("footer");
@@ -510,8 +615,13 @@ function render(){
   if (home) home.style.display = tab === "menu" ? "none" : "";
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
-  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "more" ? "Voices and look" : "Say a phrase";
-  const banner = (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close SteadyVoice.</p>` : "");
+  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "more" ? "Voices and look" : "Say a phrase";
+  const slot = noteNow();
+  const lines = scriptLines(slot.body);
+  const at = Math.min(slot.place || 0, lines.length);
+  const waiting = tab !== "notes" && lines.length && (noteReading || (at > 0 && at < lines.length));
+  const waitBar = waiting ? `<div class="card" style="display:flex;gap:.4rem;align-items:center"><button class="wide ghost" data-go="notes" type="button" style="flex:1;text-align:left"><b>${esc(slot.title)}</b><br><span class="muted">${noteReading ? "Speaking line " + (at + 1) + " of " + lines.length : "Paused at line " + (at + 1) + " of " + lines.length}</span></button><button class="teal" id="note-bar" type="button">${noteReading ? "Pause" : "Continue"}</button></div>` : "";
+  const banner = waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close SteadyVoice.</p>` : "");
   const steps = [
     "Tap a phrase. This phone says it for you.",
     "Speaker is for people in the room. Phone call is for someone on the phone.",
@@ -522,6 +632,7 @@ function render(){
   if (tab === "menu") view.innerHTML = banner + menu() + guide;
   else if (tab === "board") view.innerHTML = banner + board() + guide;
   else if (tab === "say") view.innerHTML = banner + typer() + guide;
+  else if (tab === "notes") view.innerHTML = banner + notepad() + guide;
   else if (tab === "call") view.innerHTML = banner + call() + guide;
   else view.innerHTML = banner + more() + guide;
   if (tab === "say") bindComposer();
@@ -577,6 +688,7 @@ function menu(){
   const rows = [
     ["board", "Say a phrase", "Tap a button. The phone says the whole sentence."],
     ["say", "Type a sentence", "Write words that are not on a button."],
+  ["notes", "Notepad", "Write it ahead. Pause, then pick up the same line."],
     ["call", "Phone call", "So the person on the line can hear her."],
     ["talks", "Conversations", "Open an earlier talk and say it again."],
     ["more", "Voices and look", "Change the voice, the size, or the dark screen."],
@@ -653,7 +765,8 @@ function typer(){
   const from = state.settings.hintFrom || "both";
   const pack = typingPack();
   const options = fold("speak", "Typing and extras", `<button class="wide ghost" id="word-line" type="button">${wordOn ? "Word line is on" : "Word line is off"}</button><button class="wide ghost" id="phrase-toggle" type="button">${phraseOn ? "Phrase line is on" : "Phrase line is off"}</button><button class="wide ghost" id="pin-box" type="button">${pinOn ? "Box stays above the keyboard" : "Box stays in place"}</button><button class="wide ${from==="both"?"ink":"ghost"}" data-from="both" type="button">Board and her words</button><button class="wide ${from==="said"?"ink":"ghost"}" data-from="said" type="button">Only words she has said</button><button class="wide ${from==="board"?"ink":"ghost"}" data-from="board" type="button">Only board phrases</button><button class="wide ink" id="do-text" type="button">Text it</button><button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button>`);
-  return `<label for="box">What should the phone say?</label>
+  return `<button class="wide" data-go="notes" type="button" style="text-align:left;margin-bottom:.6rem"><b>Notepad</b><br><span class="muted">Write a long script. Pause it, then start again on the same line.</span></button>
+    <label for="box">What should the phone say?</label>
     <div class="chips" style="flex-wrap:nowrap;overflow-x:auto">${LANGS.map(([id,label]) => `<button class="chip${(state.settings.outputLang||"en")===id?" on":""}" data-lang="${id}" type="button">${label}</button>`).join("")}</div>
     <p class="muted" id="gloss"></p>
     <div id="composer">
@@ -733,6 +846,14 @@ view.addEventListener("click", (event) => {
     render();
     return;
   }
+  if (t.id === "note-go" || t.id === "note-bar"){
+    if (noteReading){ pauseNote(); render(); }
+    else readNote();
+    return;
+  }
+  if (t.id === "note-restart"){ pauseNote(); noteNow().place = 0; save(); readNote(0); return; }
+  if (t.dataset.slot){ pauseNote(); book().active = t.dataset.slot; save(); render(); return; }
+  if (t.dataset.jump){ readNote(Number(t.dataset.jump)); return; }
   if (t.dataset.suggest){
     const suggestion = t.dataset.suggest;
     const kind = t.dataset.kind || "word";
@@ -833,6 +954,16 @@ view.addEventListener("input", (event) => {
   }
   if (event.target.id === "speed"){ state.settings.speed = Number(event.target.value) / 100; save(); }
   if (event.target.id === "pitch"){ state.settings.pitch = Number(event.target.value) / 100; save(); }
+  if (event.target.id === "note-title"){ noteNow().title = event.target.value.slice(0, 40); save(); }
+  if (event.target.id === "note-body"){
+    if (noteReading) pauseNote();
+    const slot = noteNow();
+    slot.body = event.target.value;
+    const count = scriptLines(slot.body).length;
+    if ((slot.place || 0) > count) slot.place = count;
+    save();
+    paintNote();
+  }
   if (event.target.id === "name"){ state.settings.name = event.target.value; save(); }
 });
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.tab; notice = ""; render(); });
@@ -850,7 +981,7 @@ $("#sound").addEventListener("click", (event) => {
     render();
   }
 });
-$("#stop").onclick = () => { speechSynthesis.cancel(); speaking = ""; render(); };
+$("#stop").onclick = () => { pauseNote(); speaking = ""; render(); };
 $("#home").onclick = () => { tab = "menu"; arranging = false; openTalk = ""; notice = ""; render(); };
 $("#again").onclick = () => { if (state.history[0]) say(state.history[0]); };
 document.body.addEventListener("click", (event) => {
