@@ -1368,7 +1368,8 @@ view.addEventListener("input", (event) => {
     paintLook(lookDraft);
   }
   if (event.target.id === "look-name" && lookDraft){ lookDraft.name = event.target.value.slice(0, 24); }
-  if (event.target.id === "look-overlay" && lookDraft){ lookDraft.overlay = Number(event.target.value); const label = event.target.previousSibling; }
+  if (event.target.id === "look-overlay" && lookDraft){ lookDraft.overlay = Number(event.target.value); }
+  if (event.target.dataset.field){
     mine()[event.target.dataset.field] = event.target.value.slice(0, 240);
     if (event.target.dataset.field === "preferred" || event.target.dataset.field === "fullName"){
       const profile = mine();
