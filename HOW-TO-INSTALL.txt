@@ -2,7 +2,7 @@ HOW TO SET UP STEADYVOICE
 
 The easy way on a phone:
 Open this link in Chrome.
-https://treyu2023.github.io/steadyvoice/
+https://cdn.jsdelivr.net/gh/Treyu2023/steadyvoice@main/index.html
 Tap the three dots.
 Tap Install app, or Add to Home screen.
 Tap the SteadyVoice icon next time.

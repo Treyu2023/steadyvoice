@@ -2,7 +2,7 @@
 
 Send her this link. She opens it in Chrome:
 
-https://treyu2023.github.io/steadyvoice/
+https://cdn.jsdelivr.net/gh/Treyu2023/steadyvoice@main/index.html
 
 Then she taps the three dots and **Install app** or **Add to Home screen**. Next time she taps the SteadyVoice icon. No store and no account.
 
