@@ -10,7 +10,7 @@ THE EASY WAY, ON HER PHONE
 ================================
 
 1. Open this link in Chrome.
-   https://cdn.jsdelivr.net/gh/Treyu2023/steadyvoice@main/index.html
+   https://raw.githack.com/Treyu2023/steadyvoice/main/index.html
 
 2. Tap the three dots at the top.
 

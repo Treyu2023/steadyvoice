@@ -2,7 +2,7 @@
 
 Send her this link. She opens it in Chrome:
 
-https://cdn.jsdelivr.net/gh/Treyu2023/steadyvoice@main/index.html
+https://raw.githack.com/Treyu2023/steadyvoice/main/index.html
 
 Then she taps the three dots and **Install app** or **Add to Home screen**. Next time she taps the Speak Well icon. No store and no account.
 
