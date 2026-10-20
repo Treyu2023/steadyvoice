@@ -36,16 +36,22 @@ Conversations
 
 Voices and look
   The screen starts dark.
-  About me stores her address, license, plate, people, health, and short reminders.
-  Typing "my address" or a person's name offers the real words. Save a copy of my information
-  from that screen. After a reinstall, use Put my information back with that same file.
-  speak it, pause on a line, use another button, then continue where she stopped.
   Speed and pitch are on Type a sentence. Free high-quality voices come from the phone:
   Android Settings, search Text-to-speech, Google Text-to-speech, Install voice data.
   iPhone Settings, Accessibility, Spoken Content, Voices.
   Mood goes from soft to harsh.
   Sweet, Giggle, Drama, and Grumpy are for play.
-  Arrange is locked until someone opens it, so buttons are not moved by accident.
+  Notepad
+  Three notes stay on the phone. She can write a conversation ahead of time,
+  speak it, pause on a line, use another button, then continue where she stopped.
+
+About me
+  Address, license, plate, people, health, and short reminders.
+  Typing "my address" or a person's name offers the real words.
+  Save a copy of my information from that screen.
+  After a reinstall, choose Put my information back and pick that same file.
+
+Arrange is locked until someone opens it, so buttons are not moved by accident.
 
 Emergency
   Call 911 and Emergency are not on the front.
