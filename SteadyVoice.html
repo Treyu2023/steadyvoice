@@ -605,11 +605,12 @@ async function say(text){
 function textIt(text){ location.href = "sms:?&body=" + encodeURIComponent(text); }
 function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
 function mine(){
-  const blank = {fullName:"", preferred:"", birth:"", phone:"", email:"", address:"", city:"", license:"", plate:"", vehicle:"", blood:"", allergies:"", medicines:"", conditions:"", doctor:"", doctorPhone:"", insurance:"", memberId:"", pharmacy:"", emergencyName:"", emergencyRelation:"", emergencyPhone:"", people:[], reminders:[]};
+  const blank = {fullName:"", preferred:"", birth:"", phone:"", email:"", address:"", city:"", license:"", plate:"", vehicle:"", hobbies:"", color:"", blood:"", allergies:"", diabetic:"", medicines:"", conditions:"", doctor:"", doctorPhone:"", insurance:"", memberId:"", pharmacy:"", emergencyName:"", emergencyRelation:"", emergencyPhone:"", people:[], reminders:[], doses:[]};
   if (!state.profile || typeof state.profile !== "object") state.profile = Object.assign({}, blank);
   Object.keys(blank).forEach(key => { if (state.profile[key] == null) state.profile[key] = blank[key]; });
   if (!Array.isArray(state.profile.people)) state.profile.people = [];
   if (!Array.isArray(state.profile.reminders)) state.profile.reminders = [];
+  if (!Array.isArray(state.profile.doses)) state.profile.doses = [];
   return state.profile;
 }
 function profileFacts(){
@@ -626,9 +627,16 @@ function profileFacts(){
   if (String(p.license || "").trim()) add("Driver license", "My driver's license number is " + p.license.trim() + ".", ["license", "driver", "my license", "drivers license"]);
   if (String(p.plate || "").trim()) add("License plate", "My license plate is " + p.plate.trim() + ".", ["plate", "license plate", "my plate"]);
   if (String(p.vehicle || "").trim()) add("My car", "My vehicle is " + p.vehicle.trim() + ".", ["car", "vehicle", "my car"]);
+  if (String(p.hobbies || "").trim()) add("Hobbies", "My hobbies are " + p.hobbies.trim() + ".", ["hobby", "hobbies", "my hobbies"]);
+  if (String(p.color || "").trim()) add("Favorite color", "My favorite color is " + p.color.trim() + ".", ["color", "favorite color"]);
   if (String(p.blood || "").trim()) add("Blood type", "My blood type is " + p.blood.trim() + ".", ["blood", "blood type"]);
   if (String(p.allergies || "").trim()) add("Allergies", "My allergies are " + p.allergies.trim() + ".", ["allergy", "allergies"]);
-  if (String(p.medicines || "").trim()) add("Medicines", "My medicines are " + p.medicines.trim() + ".", ["medicine", "medicines", "medication"]);
+  if (p.diabetic === "yes") add("Diabetes", "Yes. I am diabetic.", ["diabetic", "diabetes", "sugar"]);
+  if (p.diabetic === "no") add("Diabetes", "No. I am not diabetic.", ["diabetic", "diabetes", "sugar"]);
+  if (p.diabetic === "unsure") add("Diabetes", "I am not sure if I am diabetic.", ["diabetic", "diabetes"]);
+  const scheduled = (p.doses || []).filter(dose => String(dose.name || "").trim()).map(dose => dose.name.trim() + (dose.amount ? ", " + dose.amount.trim() : "") + (dose.times && dose.times.length ? " at " + dose.times.join(" and ") : ""));
+  if (scheduled.length) add("Medicines", "I take " + scheduled.join(". ") + ".", ["medicine", "medicines", "medication", "my medicine"]);
+  else if (String(p.medicines || "").trim()) add("Medicines", "My medicines are " + p.medicines.trim() + ".", ["medicine", "medicines", "medication", "my medicine"]);
   if (String(p.conditions || "").trim()) add("Health", "Please know this about my health. " + p.conditions.trim(), ["health", "condition"]);
   if (String(p.doctor || "").trim() || String(p.doctorPhone || "").trim()) add("My doctor", "My doctor is " + [p.doctor, p.doctorPhone].map(item => String(item || "").trim()).filter(Boolean).join(", ") + ".", ["doctor", "my doctor"]);
   if (String(p.pharmacy || "").trim()) add("Pharmacy", "My pharmacy is " + p.pharmacy.trim() + ".", ["pharmacy"]);
@@ -656,15 +664,85 @@ function about(){
   const memories = (p.reminders || []).map(item => `<div class="row"><button class="wide ghost" data-memory="${esc(item.id)}" type="button">${esc(item.text)}</button><button class="ghost" data-drop-memory="${esc(item.id)}" type="button">Delete</button></div>`).join("");
   return `<p class="muted">Fill this in once. On Type a sentence, my address, my license, or a person's name offers the real words. This stays on the phone. Save a copy so a reinstall can put it back. Do not store a Social Security number.</p>
     <div class="chips">${says}</div>
-    ${fold("who", "Who I am", box("preferred", "What people call me", "First name") + box("fullName", "Full name", "First and last") + box("birth", "Date of birth", "Month day, year") + box("phone", "Phone", "Her number") + box("email", "Email", "name@email.com"))}
+    ${fold("who", "Who I am", box("preferred", "What people call me", "First name") + box("fullName", "Full name", "First and last") + box("birth", "Date of birth", "Month day, year") + box("phone", "Phone", "Her number") + box("email", "Email", "name@email.com") + box("hobbies", "Hobbies", "Gardening, music") + box("color", "Favorite color", "Blue"))}
     ${fold("home", "Home, car, and license", box("address", "Street address", "123 Main Street") + box("city", "City and state", "Town, state") + box("license", "Driver's license number", "License number") + box("plate", "License plate", "ABC-1234") + box("vehicle", "Car", "Blue Honda, 2014"))}
-    ${fold("health", "Health", box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + box("medicines", "Medicines", "Names and when") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
+    ${fold("health", "Health", `<p class="kicker">Diabetic?</p><div class="grid" style="grid-template-columns:1fr 1fr 1fr">${["yes","Yes","no","No","unsure","Not sure"].reduce((html, item, index, all) => index % 2 ? html + `<button class="${p.diabetic===all[index-1]?"ink":"ghost"}" data-diabetic="${all[index-1]}" type="button">${item}</button>` : html, "")}</div>` + box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + `<p><b>Medicine alarm</b></p><p class="muted">Add a medicine and a time. The phone rings, vibrates, and says the name while SteadyVoice is open.</p><input id="med-name" placeholder="Medicine name"><input id="med-amount" placeholder="Amount, like 10 mg"><input id="med-time" type="time" value="08:00"><button class="wide ink" id="add-dose" type="button">Add this medicine</button><button class="wide ghost" id="allow-alerts" type="button">Allow phone alerts</button>` + (p.doses || []).map(dose => `<div class="card"><b>${esc(dose.name || "")}</b> ${esc(dose.amount || "")}<p class="muted">${esc((dose.times || []).join(", ") || "No time yet")}</p><button class="ghost" data-dose-sound="${esc(dose.id)}" type="button">${dose.sound === false ? "Ringtone off" : "Ringtone on"}</button><button class="ghost" data-dose-vibrate="${esc(dose.id)}" type="button">${dose.vibrate === false ? "Vibrate off" : "Vibrate on"}</button><button class="wide ghost" data-test-dose="${esc(dose.id)}" type="button">Test alarm</button><button class="wide ghost" data-drop-dose="${esc(dose.id)}" type="button">Remove</button></div>`).join("") + box("medicines", "Other medicine notes", "Anything the alarm does not cover") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
     ${fold("people", "People", box("emergencyName", "Emergency contact", "Name") + box("emergencyRelation", "Who they are", "Sister, neighbor") + box("emergencyPhone", "Their phone", "Number") + people + `<button class="wide ink" id="add-person" type="button">Add a person</button>`)}
     ${fold("remember", "Remember for later", `<p class="muted">Short things. Appointments, where the car is, what she meant to say.</p><div class="row"><input id="memory" placeholder="Remember…"><button class="ink" id="add-memory" type="button">Save</button></div>${memories}`)}
     <button class="wide ink" id="save-profile" type="button">Save a copy of my information</button>
     <label class="wide ghost" style="display:flex;align-items:center;justify-content:center">Put my information back<input id="restore-profile" type="file" accept="application/json" style="display:none"></label>`;
 }
 
+let ringTimer = 0, ringCtx = null, rangToken = "", due = null;
+function stopRing(){
+  clearInterval(ringTimer);
+  ringTimer = 0;
+  if (ringCtx){ try { ringCtx.close(); } catch (error) {} ringCtx = null; }
+  if (navigator.vibrate) navigator.vibrate(0);
+}
+function startRing(vibrate){
+  stopRing();
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  const ctx = new Ctx();
+  ringCtx = ctx;
+  const beep = () => {
+    if (ringCtx !== ctx) return;
+    const tone = ctx.createOscillator();
+    const gain = ctx.createGain();
+    tone.type = "square";
+    tone.frequency.value = 880;
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+    tone.connect(gain);
+    gain.connect(ctx.destination);
+    tone.start();
+    tone.stop(ctx.currentTime + 0.3);
+  };
+  beep();
+  ringTimer = setInterval(beep, 900);
+  if (vibrate !== false && navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 700]);
+  setTimeout(() => { if (ringCtx === ctx) stopRing(); }, 45000);
+}
+function doseDay(now){ const day = now || new Date(); return day.getFullYear() + "-" + (day.getMonth() + 1) + "-" + day.getDate(); }
+function doseClock(now){ const day = now || new Date(); return String(day.getHours()).padStart(2, "0") + ":" + String(day.getMinutes()).padStart(2, "0"); }
+function readFired(){ try { return JSON.parse(localStorage.getItem("steadyvoice.dose.fired") || "{}"); } catch (error) { return {}; } }
+function findDue(){
+  const clock = doseClock();
+  const day = doseDay();
+  const fired = readFired();
+  for (const dose of mine().doses || []){
+    if (!String(dose.name || "").trim()) continue;
+    for (const time of dose.times || []){
+      if (time === clock && !fired[dose.id + "@" + time + "@" + day]) return {dose, time};
+    }
+  }
+  return null;
+}
+function markDose(id, time){
+  const day = doseDay();
+  const next = {};
+  Object.keys(readFired()).forEach(key => { if (key.endsWith("@" + day)) next[key] = 1; });
+  next[id + "@" + time + "@" + day] = 1;
+  try { localStorage.setItem("steadyvoice.dose.fired", JSON.stringify(next)); } catch (error) {}
+}
+function checkDose(){
+  const hit = findDue();
+  if (!hit){
+    if (due){ due = null; render(); }
+    return;
+  }
+  const token = hit.dose.id + "@" + hit.time;
+  due = hit;
+  if (rangToken === token) return;
+  rangToken = token;
+  if (hit.dose.sound !== false) startRing(hit.dose.vibrate !== false);
+  else if (hit.dose.vibrate !== false && navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 700]);
+  if (window.Notification && Notification.permission === "granted"){
+    try { new Notification("Medicine", { body: "Time to take " + hit.dose.name }); } catch (error) {}
+  }
+  say("Time to take " + hit.dose.name + (hit.dose.amount ? ", " + hit.dose.amount : "") + ".");
+}
 function render(){
   document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
   renderSound();
@@ -683,7 +761,8 @@ function render(){
   const at = Math.min(slot.place || 0, lines.length);
   const waiting = tab !== "notes" && lines.length && (noteReading || (at > 0 && at < lines.length));
   const waitBar = waiting ? `<div class="card" style="display:flex;gap:.4rem;align-items:center"><button class="wide ghost" data-go="notes" type="button" style="flex:1;text-align:left"><b>${esc(slot.title)}</b><br><span class="muted">${noteReading ? "Speaking line " + (at + 1) + " of " + lines.length : "Paused at line " + (at + 1) + " of " + lines.length}</span></button><button class="teal" id="note-bar" type="button">${noteReading ? "Pause" : "Continue"}</button></div>` : "";
-  const banner = waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close SteadyVoice.</p>` : "");
+  const doseBar = due ? `<div class="card"><b>Time for ${esc(due.dose.name)}</b><p>${esc([due.dose.amount, due.time].filter(Boolean).join(" · "))}</p><button class="wide ink" id="took-dose" type="button">I took it</button><button class="wide ghost" id="stop-dose" type="button">Stop alarm</button></div>` : "";
+  const banner = doseBar + waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close SteadyVoice.</p>` : "");
   const steps = [
     "Tap a phrase. This phone says it for you.",
     "Speaker is for people in the room. Phone call is for someone on the phone.",
@@ -758,7 +837,9 @@ function menu(){
     ["more", "Voices and look", "Change the voice, the size, or the dark screen."],
     ["guide", "Show me how", "Four short steps. You can come back anytime."]
   ];
-  return rows.map(row => `<button class="wide" data-go="${row[0]}" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>${row[1]}</b><br><span class="muted">${row[2]}</span></button>`).join("")
+  const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+  const setup = installed ? "" : `<div class="card"><b>Put this on the phone</b><p>In Chrome, tap the three dots. Tap Install app, or Add to Home screen. Open SteadyVoice from that icon next time.</p></div>`;
+  return setup + rows.map(row => `<button class="wide" data-go="${row[0]}" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>${row[1]}</b><br><span class="muted">${row[2]}</span></button>`).join("")
     + `<button class="wide ghost" data-go="emergency" type="button" style="display:block;width:100%;text-align:left;margin-top:1rem"><b>Emergency</b><br><span class="muted">Only if she needs help right now.</span></button>`;
 }
 function shown(){
@@ -937,6 +1018,23 @@ view.addEventListener("click", (event) => {
   }
   if (t.dataset.memory){ const item = mine().reminders.find(row => row.id === t.dataset.memory); if (item) say(item.text); return; }
   if (t.dataset.dropMemory){ const profile = mine(); profile.reminders = profile.reminders.filter(row => row.id !== t.dataset.dropMemory); save(); render(); return; }
+  if (t.id === "took-dose" || t.id === "stop-dose"){ if (due) markDose(due.dose.id, due.time); due = null; rangToken = ""; stopRing(); render(); return; }
+  if (t.dataset.diabetic){ const profile = mine(); profile.diabetic = profile.diabetic === t.dataset.diabetic ? "" : t.dataset.diabetic; save(); render(); return; }
+  if (t.id === "add-dose"){
+    const name = (document.getElementById("med-name") || {}).value || "";
+    const amount = (document.getElementById("med-amount") || {}).value || "";
+    const time = (document.getElementById("med-time") || {}).value || "";
+    if (!name.trim() || !time) return;
+    const profile = mine();
+    profile.doses.push({id:"dose-" + Date.now(), name:name.trim().slice(0, 60), amount:amount.trim().slice(0, 40), times:[time], sound:true, vibrate:true});
+    profile.doses = profile.doses.slice(0, 12);
+    save(); render(); return;
+  }
+  if (t.id === "allow-alerts" && window.Notification){ Notification.requestPermission(); return; }
+  if (t.dataset.doseSound){ const dose = mine().doses.find(item => item.id === t.dataset.doseSound); if (dose){ dose.sound = dose.sound === false; save(); render(); } return; }
+  if (t.dataset.doseVibrate){ const dose = mine().doses.find(item => item.id === t.dataset.doseVibrate); if (dose){ dose.vibrate = dose.vibrate === false; save(); render(); } return; }
+  if (t.dataset.testDose){ startRing(true); setTimeout(stopRing, 3500); return; }
+  if (t.dataset.dropDose){ const profile = mine(); profile.doses = profile.doses.filter(item => item.id !== t.dataset.dropDose); save(); render(); return; }
   if (t.id === "save-profile"){
     const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
     const link = document.createElement("a");
@@ -1112,6 +1210,7 @@ document.body.addEventListener("click", (event) => {
   if (t && t.closest("footer")) say(t.dataset.say);
 });
 if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => { if (tab === "more" || tab === "call") render(); };
+setInterval(checkDose, 15000);
 if (navigator.audioSession && navigator.audioSession.addEventListener) {
   navigator.audioSession.addEventListener("statechange", () => {
     const next = navigator.audioSession.state === "interrupted";

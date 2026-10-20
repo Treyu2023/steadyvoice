@@ -1,53 +1,26 @@
 ## SteadyVoice
 
-Tap a button. The phone speaks.
+Send her this link. She opens it in Chrome:
 
-## On a phone call
+https://treyu2023.github.io/steadyvoice/
 
-iPhone and Android will not let any app speak directly into a regular phone call. They block it.
+Then she taps the three dots and **Install app** or **Add to Home screen**. Next time she taps the SteadyVoice icon. No store and no account.
 
-What works:
+The same page works offline after that first open.
 
-1. Start the call.
-2. Tap Speaker. Turn the volume all the way up.
-3. Open SteadyVoice and tap Call mode.
-4. Tap a button. Hold the phone a little away, speaker facing up.
+## What she can do
 
-The voice comes out of the speaker. The microphone hears it. The other person hears her.
+- Tap a phrase and the phone says the whole sentence.
+- Type a sentence. Words she has said before are offered.
+- Speak English out loud in Spanish, Italian, French, Chinese, or Japanese.
+- Pick a woman's or a man's voice, then set speed, pitch, and mood.
+- Write a script in Notepad, pause it, and continue on the same line.
+- Save address, license, car, hobbies, favorite color, people, and health in About me. Typing "my address" or a name fills in the real words.
+- Set a medicine time. While SteadyVoice is open it rings, vibrates, and says the medicine name.
+- On a call, tap Phone call, then Speaker on the phone's call screen, and hold the phone a little away.
 
-Call mode can start with “Please listen” so the first words are not cut off.
+## If a link is hard
 
-## Women’s voices
+Send the file SteadyVoice.html from this page's files, or SteadyVoice.zip for a Windows computer. HOW-TO-INSTALL.txt is the plain-language version.
 
-Open More. Choose Clara, Helen, June, Mae, or Nora. They are different speeds and tones, using the best woman’s voice already on the phone.
-
-If the voice sounds like a man, install a woman’s voice:
-
-- Android: Settings, search Text-to-speech, download English (United States) and English (United Kingdom).
-- iPhone: Settings, Accessibility, Spoken Content, Voices, English.
-
-## Texting
-
-Open Type, write a sentence, then Text it. That opens the phone’s own Messages app with the words filled in. She taps Send.
-
-WhatsApp works the same way if it is installed. A separate messaging app is not required.
-
-## Put it on her phone
-
-Open https://treyu2023.github.io/steadyvoice/ in Chrome or Safari.
-
-Tap the menu. Tap Install app or Add to Home screen.
-
-That is the one tap. After the first open it works offline.
-
-An iPhone cannot install a random downloaded app. Apple only allows that from the App Store.
-
-## One file, if a website is hard
-
-Send **SteadyVoice.html** only. It is the whole app.
-
-1. Text or email the file. Save it in Download.
-2. Open the Download folder, tap the file, and choose Chrome.
-3. Do not open it from inside a zip.
-
-Nothing is uploaded. Phrases stay on the phone.
+Nothing she types is uploaded. A backup file puts it back after a reinstall.

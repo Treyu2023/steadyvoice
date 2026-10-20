@@ -1,4 +1,4 @@
-const CACHE = "steadyvoice-2";
+const CACHE = "steadyvoice-3";
 const ASSETS = [
   "./",
   "./index.html",

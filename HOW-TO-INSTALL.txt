@@ -1,6 +1,12 @@
 HOW TO SET UP STEADYVOICE
 
-SteadyVoice speaks when she taps a word.
+The easy way on a phone:
+Open this link in Chrome.
+https://treyu2023.github.io/steadyvoice/
+Tap the three dots.
+Tap Install app, or Add to Home screen.
+Tap the SteadyVoice icon next time.
+
 You do not need a store.
 You do not need an account.
 You do not pay.
@@ -46,8 +52,12 @@ Voices and look
   speak it, pause on a line, use another button, then continue where she stopped.
 
 About me
-  Address, license, plate, people, health, and short reminders.
-  Typing "my address" or a person's name offers the real words.
+  Address, license, plate, car, hobbies, favorite color, people, and health.
+  Diabetic is Yes, No, or Not sure.
+  Medicine alarm: add a name, an amount, and a time.
+  While SteadyVoice is open, that time rings, vibrates, and says the medicine.
+  Tap Allow phone alerts once. Tap I took it when she has taken it.
+  Typing "my address", "my hobbies", or a person's name offers the real words.
   Save a copy of my information from that screen.
   After a reinstall, choose Put my information back and pick that same file.
 
