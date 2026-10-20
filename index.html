@@ -122,14 +122,18 @@ const PHRASES = [
   ["head","Headache","I have a headache.","Care","need"]
 ].map(([id,label,speak,group,tone]) => ({id,label,speak,group,tone}));
 const PRESETS = [
-  ["clara","Clara","Clear and steady",0.86,1.05],
-  ["helen","Helen","Warm and lower",0.8,0.92],
-  ["june","June","Brighter",0.92,1.16],
-  ["mae","Mae","Soft",0.76,1],
-  ["nora","Nora","Slow, for calls",0.68,1.02]
-].map(([id,name,hint,rate,pitch]) => ({id,name,hint,rate,pitch}));
+  {id:"clara", name:"Clara", hint:"Clear and steady", rate:0.86, pitch:1.05, kind:"woman"},
+  {id:"helen", name:"Helen", hint:"Warm and lower", rate:0.8, pitch:0.92, kind:"woman"},
+  {id:"june", name:"June", hint:"Brighter", rate:0.92, pitch:1.16, kind:"woman"},
+  {id:"mae", name:"Mae", hint:"Soft", rate:0.76, pitch:1, kind:"woman"},
+  {id:"nora", name:"Nora", hint:"Slow, for calls", rate:0.68, pitch:1.02, kind:"woman"},
+  {id:"owen", name:"Owen", hint:"Steady man", rate:0.84, pitch:0.72, kind:"man"},
+  {id:"caleb", name:"Caleb", hint:"Warm and low", rate:0.76, pitch:0.58, kind:"man"},
+  {id:"miles", name:"Miles", hint:"Clear and lighter", rate:0.9, pitch:0.86, kind:"man"},
+  {id:"arthur", name:"Arthur", hint:"Slow, for calls", rate:0.64, pitch:0.66, kind:"man"}
+];
 const FEMALE = /female|woman|samantha|victoria|karen|moira|tessa|fiona|zira|hazel|jenny|aria|emma|libby|sonia|allison|ava|serena|kate|salli|joanna|ivy|melissa|amy|olivia|susan|nicky/i;
-const MALE = /\bmale\b|\bdavid\b|\bdaniel\b|\balex\b|\bfred\b|\bguy\b|\bgeorge\b|\bmatthew\b|\bjoey\b/i;
+const MALE = /\bmale\b|\bdavid\b|\bdaniel\b|\balex\b|\bfred\b|\bguy\b|\bgeorge\b|\bmatthew\b|\bjoey\b|\bjames\b|\bjorge\b|\bdiego\b|\bluca\b|\bpierre\b|\botoya\b|\bthomas\b/i;
 const KEY = "steadyvoice.call.v2";
 const $= (s,r=document) => r.querySelector(s);
 const view = $("#view");
@@ -319,9 +323,11 @@ function shape(){
   const base = comedy || preset();
   const mood = Math.min(100, Math.max(0, Number(state.settings.mood)));
   const safe = Number.isFinite(mood) ? mood : 50;
+  const speed = Math.min(1.35, Math.max(0.7, Number(state.settings.speed) || 1));
+  const lift = Math.min(1.55, Math.max(0.55, Number(state.settings.pitch) || 1));
   return {
-    rate: Math.min(1.35, Math.max(0.5, base.rate * (1 + (safe - 50) / 280))),
-    pitch: Math.min(2, Math.max(0.45, base.pitch * (1 + (50 - safe) / 180)))
+    rate: Math.min(1.5, Math.max(0.45, base.rate * speed * (1 + (safe - 50) / 280))),
+    pitch: Math.min(2, Math.max(0.4, base.pitch * lift * (1 + (50 - safe) / 180)))
   };
 }
 function fold(id, label, inner){
@@ -442,12 +448,16 @@ async function translateLine(text, lang){
 }
 function pickLangVoice(lang){
   const all = speechSynthesis.getVoices();
-  if (!lang || lang === "en"){
-    const list = voices();
-    return list.find(v => v.voiceURI === state.settings.voiceURI) || list[0];
-  }
-  const pool = all.filter(v => String(v.lang || "").toLowerCase().replace("_","-").startsWith(lang));
-  return pool[0] || voices()[0];
+  const kind = (preset().kind === "man") ? "man" : "woman";
+  const saved = state.settings.voiceURI ? all.find(v => v.voiceURI === state.settings.voiceURI) : null;
+  if (saved && (!lang || lang === "en" || String(saved.lang || "").toLowerCase().startsWith(lang))) return saved;
+  const prefix = !lang || lang === "en" ? "en" : lang;
+  const pool = all.filter(v => String(v.lang || "").toLowerCase().replace("_","-").startsWith(prefix));
+  const men = pool.filter(v => MALE.test(v.name) && !FEMALE.test(v.name));
+  const women = pool.filter(v => FEMALE.test(v.name) && !MALE.test(v.name));
+  if (kind === "man" && men.length) return men[0];
+  if (kind !== "man" && women.length) return women[0];
+  return pool[0] || all[0];
 }
 async function say(text){
   const clean = text.trim();
@@ -656,6 +666,13 @@ function typer(){
     </div>
     <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Soft</span><input id="mood" type="range" min="0" max="100" value="${moodSafe}" aria-label="Mood, from soft to harsh" style="flex:1;accent-color:#0e6b62"><span class="muted">Harsh</span></div>
     <p class="muted" id="mood-word">${word}</p>
+    <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Slow</span><input id="speed" type="range" min="70" max="135" value="${Math.round((Number(state.settings.speed)||1)*100)}" aria-label="Speed, from slow to fast" style="flex:1;accent-color:#0e6b62"><span class="muted">Fast</span></div>
+    <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Low</span><input id="pitch" type="range" min="55" max="155" value="${Math.round((Number(state.settings.pitch)||1)*100)}" aria-label="Pitch, from low to high" style="flex:1;accent-color:#0e6b62"><span class="muted">High</span></div>
+    <button class="wide ghost" id="hear-voice" type="button">Hear this voice</button>
+    <p style="margin:.4rem 0 .2rem;font-weight:600">Women</p>
+    <div class="chips">${PRESETS.filter(p => p.kind==="woman").map(p => `<button class="chip${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div>
+    <p style="margin:.4rem 0 .2rem;font-weight:600">Men</p>
+    <div class="chips">${PRESETS.filter(p => p.kind==="man").map(p => `<button class="chip${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div>
     <p style="margin:.4rem 0 .2rem;font-weight:600">Play voices</p>
     <div class="chips">${chips}</div>
     ${options}`;
@@ -692,7 +709,7 @@ function more(){
     ${current.lines.length ? `<button class="wide ghost" data-open-talk="${esc(state.currentId)}" type="button" style="margin-top:.4rem">See every line</button>` : ""}
     ${old ? `<p class="kicker" style="margin-top:.8rem">Earlier</p>${old}` : ""}
   </div>
-    <div class="card"><b>Women's voices</b><p>Clara, Helen, June, Mae, and Nora use the best woman's voice on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No woman's voice yet. In the phone settings, download an English woman's text-to-speech voice, then reopen this page."}</p>
+    <div class="card"><b>Voices</b><p>Clara, Helen, June, Mae, and Nora are women. Owen, Caleb, Miles, and Arthur are men. Speed and pitch are on Type a sentence. They use a free voice already on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No named voice yet."} The best free packs come from the phone itself. On Android, search Settings for Text-to-speech, open Google Text-to-speech, and install voice data for her language, male and female if both are listed. On iPhone: Settings, Accessibility, Spoken Content, Voices.</p>
     <div class="voices">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div></div>
     <div class="card"><b>Text a phrase</b><p>Text opens the phone's own Messages app with the words filled in. She taps Send. WhatsApp does the same if it is installed. A new messaging app is not required.</p>
     <button class="wide ink" data-speak="" data-text="I had a stroke. I can hear you. I cannot speak. Please read this text." type="button">Text: I cannot speak</button></div>
@@ -781,6 +798,7 @@ view.addEventListener("click", (event) => {
   if (t.dataset.text){ textIt(t.dataset.text); return; }
   if (t.dataset.preset){
     state.settings.presetId = t.dataset.preset;
+    state.settings.voiceURI = "";
     save();
     if (t.dataset.preview) say("Hello. This is " + preset().name + ". I am here with you.");
     else render();
@@ -791,6 +809,7 @@ view.addEventListener("click", (event) => {
   if (t.id === "phrase-toggle"){ state.settings.phraseLine = state.settings.phraseLine === false; save(); render(); return; }
   if (t.id === "pin-box"){ state.settings.pinBox = state.settings.pinBox === false; save(); render(); return; }
   if (t.dataset.from){ state.settings.hintFrom = t.dataset.from; save(); render(); return; }
+  if (t.id === "hear-voice"){ say("Hello. This is how I sound. You can make me lower, higher, slower, or faster."); return; }
   if (t.id === "do-say") say(draft);
   if (t.dataset.lang){ state.settings.outputLang = t.dataset.lang; save(); render(); queueGloss(); return; }
   if (t.id === "do-text" && draft.trim()){ translateLine(draft.trim(), state.settings.outputLang || "en").then(result => textIt(result.text)); return; }
@@ -812,6 +831,8 @@ view.addEventListener("input", (event) => {
     if (label) label.textContent = word;
     save();
   }
+  if (event.target.id === "speed"){ state.settings.speed = Number(event.target.value) / 100; save(); }
+  if (event.target.id === "pitch"){ state.settings.pitch = Number(event.target.value) / 100; save(); }
   if (event.target.id === "name"){ state.settings.name = event.target.value; save(); }
 });
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => { tab = b.dataset.tab; notice = ""; render(); });

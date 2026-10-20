@@ -28,8 +28,6 @@ Phone call
   Turn the volume up.
   Hold the phone a little away.
   The other person hears her through the microphone.
-  Then come back to SteadyVoice and stay there.
-  Do not leave the Phone app in front of it, or the voice will stop.
 
 Conversations
   What she says is kept on the phone, in order.
@@ -38,7 +36,10 @@ Conversations
 
 Voices and look
   The screen starts dark.
-  She can make it light, change the size, or pick a woman's voice.
+  She can make it light, change the size, or pick a woman's or a man's voice.
+  Speed and pitch are on Type a sentence. Free high-quality voices come from the phone:
+  Android Settings, search Text-to-speech, Google Text-to-speech, Install voice data.
+  iPhone Settings, Accessibility, Spoken Content, Voices.
   Mood goes from soft to harsh.
   Sweet, Giggle, Drama, and Grumpy are for play.
   Arrange is locked until someone opens it, so buttons are not moved by accident.
