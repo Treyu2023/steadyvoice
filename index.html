@@ -50,7 +50,23 @@
   footer .wrap { max-width: 32rem; margin: 0 auto; display: grid; gap: .4rem; }
   .hide { display: none; }
   ol { margin: .4rem 0 0; padding-left: 1.1rem; }
-  html[data-theme="night"] { --paper:#141311; --ink:#f4efe8; --card:#241f1b; --line:#3c342c; --muted:#b7ab9e; --teal:#3dbaad; --soft:#1a3330; --rose:#e08a82; --rose-soft:#3a2422; --on:#06221f; }
+  html[data-theme="night"] { color-scheme: dark; --paper:#12110f; --ink:#fff8ef; --card:#2c2622; --line:#a89886; --muted:#f3e7da; --teal:#9cf3e4; --soft:#1a3330; --rose:#ffb4a8; --rose-soft:#3a2422; --on:#10211e; }
+  input, textarea, select { color: var(--ink); background: var(--card); }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+  html[data-font="plain"] body { font-family: "Segoe UI", sans-serif; }
+  html[data-font="serif"] body { font-family: Georgia, serif; }
+  html[data-font="rounded"] body { font-family: "Segoe UI", "Trebuchet MS", sans-serif; }
+  html[data-scale="1"] { font-size: 16px; }
+  html[data-scale="2"] { font-size: 18px; }
+  html[data-scale="3"] { font-size: 21px; }
+  html[data-border="bold"] button, html[data-border="bold"] input, html[data-border="bold"] textarea { box-shadow: inset 0 0 0 2px var(--line); }
+  html[data-border="none"] button, html[data-border="none"] input, html[data-border="none"] textarea { box-shadow: none; }
+  html[data-radius="square"] button, html[data-radius="square"] input, html[data-radius="square"] textarea { border-radius: .3rem; }
+  html[data-radius="round"] button { border-radius: 999px; }
+  html[data-texture="grain"] body { background-image: radial-gradient(rgba(255,255,255,.05) .7px, transparent .7px); background-size: 4px 4px; }
+  html[data-texture="linen"] body { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 7px), repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 9px); }
+  html[data-texture="dots"] body { background-image: radial-gradient(var(--line) .8px, transparent .9px); background-size: 14px 14px; }
+  html[data-motion="still"] * { animation: none !important; transition: none !important; }
   .tools { display:flex; flex-wrap:wrap; gap:.4rem; margin:.4rem 0 .6rem; }
   #sound { margin: 0 0 .7rem; }
   #sound .pick { min-height: 3.4rem; text-align: left; }
@@ -589,7 +605,7 @@ async function say(text){
   const shaped = shape();
   const voice = pickLangVoice(lang);
   const onCall = liveCall();
-  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.lang = BCP[lang] || "en-US"; u.rate = onCall ? Math.min(shaped.rate, 0.8) : shaped.rate; u.pitch = shaped.pitch; u.volume = 1; if (voice) u.voice = voice; return u; };
+  const make = (line) => { const u = new SpeechSynthesisUtterance(line); u.lang = BCP[lang] || "en-US"; u.rate = onCall ? Math.min(shaped.rate, 0.8) : shaped.rate; u.pitch = shaped.pitch; u.volume = Number(state.settings.volume) || 1; if (voice) u.voice = voice; return u; };
   speaking = spoken;
   const last = make(spoken);
   last.onend = last.onerror = () => { speaking = ""; render(); };
@@ -802,8 +818,131 @@ function helpPage(){
     <div class="card"><b>If the app is reinstalled</b><p>About me, Save a copy of my information. Later, Put my information back and choose that file.</p></div>
     <button class="wide ink" data-go="guide" type="button">Show me how</button>`;
 }
+
+const HOME_SECTIONS = [
+  ["board","Say a phrase","Tap a button. The phone says the whole sentence."],
+  ["say","Type a sentence","Write words that are not on a button."],
+  ["notes","Notepad","Write it ahead. Pause, then pick up the same line."],
+  ["about","About me","Address, license, people, and things to remember."],
+  ["call","Phone call","So the person on the line can hear her."],
+  ["talks","Conversations","Open an earlier talk and say it again."],
+  ["more","Voices and look","Voice, colors, size, and layout."],
+  ["help","Help","Setup, medicine alarms, and how to put it on the phone."],
+  ["guide","Show me how","A short walk-through. You can come back anytime."]
+];
+function stockLooks(){
+  const order = HOME_SECTIONS.map(row => row[0]);
+  const make = (name, paper, ink, card, line, accent, muted) => ({name, paper, ink, card, line, accent, muted, font:"rounded", border:"hair", radius:"soft", texture:"flat", motion:"soft", overlay:78, scale:2, sections:order.slice()});
+  return [
+    make("Night","#12110f","#fff8ef","#2c2622","#a89886","#9cf3e4","#f3e7da"),
+    make("Day","#fbf7f1","#1a1613","#ffffff","#7d6f62","#0c5c55","#3e372f"),
+    make("Calm","#10211e","#f3fffb","#1b3834","#8eccb8","#d8ffe8","#e4fff4")
+  ];
+}
+function hexOk(value, fallback){ return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback; }
+function tidyLook(raw, fallback){
+  raw = raw && typeof raw === "object" ? raw : {};
+  const known = HOME_SECTIONS.map(row => row[0]);
+  const picked = Array.isArray(raw.sections) ? raw.sections.filter(id => known.includes(id)) : [];
+  return {
+    name: raw.name ? String(raw.name).slice(0, 24) : fallback.name,
+    paper: hexOk(raw.paper, fallback.paper), ink: hexOk(raw.ink, fallback.ink), card: hexOk(raw.card, fallback.card),
+    line: hexOk(raw.line, fallback.line), accent: hexOk(raw.accent, fallback.accent), muted: hexOk(raw.muted, fallback.muted),
+    font: raw.font === "plain" || raw.font === "serif" ? raw.font : "rounded",
+    border: raw.border === "none" || raw.border === "bold" ? raw.border : "hair",
+    radius: raw.radius === "square" || raw.radius === "round" ? raw.radius : "soft",
+    texture: raw.texture === "grain" || raw.texture === "linen" || raw.texture === "dots" ? raw.texture : "flat",
+    motion: raw.motion === "still" ? "still" : "soft",
+    overlay: Math.min(92, Math.max(40, Number(raw.overlay) || 78)),
+    scale: raw.scale === 1 || raw.scale === 3 ? raw.scale : 2,
+    sections: picked.concat(known.filter(id => !picked.includes(id)))
+  };
+}
+function looksNow(){
+  const stock = stockLooks();
+  if (!Array.isArray(state.looks) || state.looks.length < 3) state.looks = stock;
+  state.looks = [0,1,2].map(index => tidyLook(state.looks[index], stock[index]));
+  if (state.lookOn !== 1 && state.lookOn !== 2) state.lookOn = 0;
+  return state.looks[state.lookOn];
+}
+function darkHex(hex){
+  const n = parseInt(String(hex).slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.55;
+}
+function paintLook(look){
+  const root = document.documentElement;
+  const dark = darkHex(look.paper);
+  root.dataset.theme = dark ? "night" : "paper";
+  root.dataset.font = look.font;
+  root.dataset.border = look.border;
+  root.dataset.radius = look.radius;
+  root.dataset.texture = look.texture;
+  root.dataset.motion = look.motion;
+  root.dataset.scale = String(look.scale);
+  root.style.colorScheme = dark ? "dark" : "light";
+  const pairs = {paper:look.paper, ink:look.ink, card:look.card, line:look.line, muted:look.muted, teal:look.accent, on: darkHex(look.accent) ? "#f7fffc" : "#10211e"};
+  Object.keys(pairs).forEach(key => root.style.setProperty("--" + key, pairs[key]));
+  root.style.setProperty("--rose", dark ? "#ffb4a8" : "#8e2f2f");
+}
+let lookEditing = false;
+let lookDraft = null;
+let lookAsk = null;
+function activeLook(){ return lookEditing && lookDraft ? lookDraft : looksNow(); }
+function lookPage(){
+  const looks = state.looks;
+  const current = activeLook();
+  const swatch = (key, label) => `<label class="row" style="display:flex;align-items:center;justify-content:space-between">${label}<input data-look="${key}" type="color" value="${esc(current[key])}" ${lookEditing ? "" : "disabled"}></label>`;
+  const picks = (key, label, options) => `<p class="kicker">${label}</p><div class="chips">${options.map(option => `<button class="chip ${current[key]===option[0]?"on":""}" data-look-choice="${key}:${option[0]}" type="button" ${lookEditing?"":"disabled"}>${option[1]}</button>`).join("")}</div>`;
+  const rows = current.sections.filter(id => id !== "guide").map((id, index, all) => {
+    const item = HOME_SECTIONS.find(row => row[0] === id);
+    if (!item) return "";
+    return `<div class="row"><b style="flex:1">${esc(item[1])}</b><button class="ghost" data-look-move="${index}:-1" type="button">Up</button><button class="ghost" data-look-move="${index}:1" type="button">Down</button><button class="ghost" data-look-hide="${id}" type="button">Hide</button></div>`;
+  }).join("");
+  const hidden = HOME_SECTIONS.filter(row => row[0] !== "guide" && !current.sections.includes(row[0])).map(row => `<button class="wide ghost" data-look-show="${row[0]}" type="button">Show ${esc(row[1])}</button>`).join("");
+  const cards = looks.map((look, index) => `<button class="${index===state.lookOn?"ink":"ghost"}" data-look-on="${index}" type="button">${esc(look.name)}</button>`).join("");
+  const ask = lookAsk ? `<div class="card" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:9"><p style="font-size:1.2rem;font-weight:650">${esc(lookAsk.title)}</p><button class="wide teal" id="look-yes" type="button">${esc(lookAsk.yes)}</button><button class="wide ghost" id="look-no" type="button">Not now</button></div>` : "";
+  return `<p class="muted">Three looks stay on this phone. Change one only after you mean to. Save asks again.</p>
+    <div class="grid" style="grid-template-columns:1fr 1fr 1fr">${cards}</div>
+    ${lookEditing ? `<button class="wide teal" id="look-save" type="button">Save this look</button><button class="wide ghost" id="look-cancel" type="button">Cancel</button>` : `<button class="wide ink" id="look-edit" type="button">Change this look</button>`}
+    <label>Name<input id="look-name" value="${esc(current.name)}" ${lookEditing?"":"disabled"}></label>
+    ${swatch("paper","Background")}${swatch("card","Cards")}${swatch("ink","Text")}${swatch("muted","Quiet text")}${swatch("accent","Buttons")}${swatch("line","Borders")}
+    ${picks("font","Type",[["rounded","Round"],["plain","Plain"],["serif","Serif"]])}
+    ${picks("border","Border",[["none","None"],["hair","Thin"],["bold","Thick"]])}
+    ${picks("radius","Corners",[["square","Square"],["soft","Soft"],["round","Round"]])}
+    ${picks("texture","Texture",[["flat","Smooth"],["grain","Grain"],["linen","Linen"],["dots","Dots"]])}
+    ${picks("motion","Motion",[["soft","Soft"],["still","Still"]])}
+    ${picks("scale","Size",[[2,"Medium"],[1,"Small"],[3,"Large"]])}
+    <label>Menu shade ${current.overlay}%<input id="look-overlay" type="range" min="40" max="92" value="${current.overlay}" ${lookEditing?"":"disabled"}></label>
+    <p class="kicker">Home order</p>${rows}${hidden}
+    <button class="wide ink" id="look-download" type="button">Download this look</button>
+    <p class="muted">Download asks where to put the file. The three looks also stay inside Speak Well.</p>
+    <label class="wide ghost" style="display:flex;align-items:center;justify-content:center">Load a look file<input id="look-file" type="file" accept="application/json" style="display:none"></label>
+    <p class="kicker">Free voices</p>
+    <a class="wide ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://play.google.com/store/apps/details?id=com.google.android.tts">Google voice</a>
+    <a class="wide ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://play.google.com/store/apps/details?id=com.github.olga_yakovleva.rhvoice.android">RHVoice, mostly free</a>
+    ${ask}`;
+}
+async function downloadLook(look){
+  const blob = new Blob([JSON.stringify({app:"Speak Well", look}, null, 2)], {type:"application/json"});
+  const name = (look.name || "look").replace(/[^\w-]+/g, "-") + ".json";
+  if (window.showSaveFilePicker){
+    try {
+      const handle = await window.showSaveFilePicker({suggestedName:name, types:[{description:"Speak Well look", accept:{"application/json":[".json"]}}]});
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (error) { if (error && error.name === "AbortError") return; }
+  }
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = name;
+  link.click();
+}
+
 function render(){
-  document.documentElement.dataset.theme = state.settings.theme === "paper" ? "paper" : "night";
+  paintLook(activeLook());
   renderSound();
   const speakingScreen = tab === "board" || tab === "say" || tab === "call" || tab === "notes" || liveCall();
   const sound = $("#sound");
@@ -814,7 +953,7 @@ function render(){
   if (home) home.style.display = tab === "menu" ? "none" : "";
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
-  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "help" ? "Help" : tab === "more" ? "Voices and look" : "Say a phrase";
+  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "help" ? "Help" : tab === "look" ? "Look" : tab === "more" ? "Voices and look" : "Say a phrase";
   const slot = noteNow();
   const lines = scriptLines(slot.body);
   const at = Math.min(slot.place || 0, lines.length);
@@ -837,6 +976,7 @@ function render(){
   else if (tab === "notes") view.innerHTML = banner + notepad() + guide;
   else if (tab === "about") view.innerHTML = banner + about() + guide;
   else if (tab === "help") view.innerHTML = banner + helpPage() + guide;
+  else if (tab === "look") view.innerHTML = banner + lookPage() + guide;
   else if (tab === "call") view.innerHTML = banner + call() + guide;
   else view.innerHTML = banner + more() + guide;
   if (tab === "say") bindComposer();
@@ -889,20 +1029,12 @@ function bindComposer(){
   place();
 }
 function menu(){
-  const rows = [
-    ["board", "Say a phrase", "Tap a button. The phone says the whole sentence."],
-    ["say", "Type a sentence", "Write words that are not on a button."],
-  ["notes", "Notepad", "Write it ahead. Pause, then pick up the same line."],
-  ["about", "About me", "Address, license, people, and things to remember."],
-    ["call", "Phone call", "So the person on the line can hear her."],
-    ["talks", "Conversations", "Open an earlier talk and say it again."],
-    ["more", "Voices and look", "Change the voice, the size, or the dark screen."],
-    ["help", "Help", "Setup, medicine alarms, and how to put it on the phone."],
-    ["guide", "Show me how", "A short walk-through. You can come back anytime."]
-  ];
+  const look = looksNow();
+  const rows = look.sections.map(id => HOME_SECTIONS.find(row => row[0] === id)).filter(Boolean);
   const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
   const setup = installed ? "" : `<div class="card"><b>Put this on the phone</b><p>In Chrome, tap the three dots. Tap Install app, or Add to Home screen. Open Speak Well from that icon next time. Then tap Allow phone alerts so medicine alarms can ring after the app is closed.</p></div>`;
   return setup + rows.map(row => `<button class="wide" data-go="${row[0]}" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>${row[1]}</b><br><span class="muted">${row[2]}</span></button>`).join("")
+    + `<button class="wide" data-go="look" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>Look</b><br><span class="muted">Colors, texture, type, borders, and home order.</span></button>`
     + `<button class="wide ghost" data-go="emergency" type="button" style="display:block;width:100%;text-align:left;margin-top:1rem"><b>Emergency</b><br><span class="muted">Only if she needs help right now.</span></button>`;
 }
 function shown(){
@@ -989,6 +1121,7 @@ function typer(){
     <p class="muted" id="mood-word">${word}</p>
     <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Slow</span><input id="speed" type="range" min="70" max="135" value="${Math.round((Number(state.settings.speed)||1)*100)}" aria-label="Speed, from slow to fast" style="flex:1;accent-color:#0e6b62"><span class="muted">Fast</span></div>
     <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Low</span><input id="pitch" type="range" min="55" max="155" value="${Math.round((Number(state.settings.pitch)||1)*100)}" aria-label="Pitch, from low to high" style="flex:1;accent-color:#0e6b62"><span class="muted">High</span></div>
+    <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Quiet</span><input id="volume" type="range" min="35" max="100" value="${Math.round((Number(state.settings.volume)||1)*100)}" aria-label="Loudness" style="flex:1;accent-color:#0e6b62"><span class="muted">Loud</span></div>
     <button class="wide ghost" id="hear-voice" type="button">Hear this voice</button>
     <p style="margin:.4rem 0 .2rem;font-weight:600">Women</p>
     <div class="chips">${PRESETS.filter(p => p.kind==="woman").map(p => `<button class="chip${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div>
@@ -1098,6 +1231,17 @@ view.addEventListener("click", (event) => {
   if (t.dataset.doseVibrate){ const dose = mine().doses.find(item => item.id === t.dataset.doseVibrate); if (dose){ dose.vibrate = dose.vibrate === false; save(); render(); } return; }
   if (t.dataset.testDose){ startRing(true); setTimeout(stopRing, 3500); return; }
   if (t.dataset.dropDose){ const profile = mine(); profile.doses = profile.doses.filter(item => item.id !== t.dataset.dropDose); save(); render(); return; }
+  if (t.id === "look-edit"){ const look = looksNow(); lookAsk = {title:"Change " + look.name + "? You can cancel before it is saved.", yes:"Change it", run(){ lookEditing = true; lookDraft = JSON.parse(JSON.stringify(look)); }}; render(); return; }
+  if (t.id === "look-yes" && lookAsk){ const run = lookAsk.run; lookAsk = null; run(); render(); return; }
+  if (t.id === "look-no"){ lookAsk = null; render(); return; }
+  if (t.id === "look-cancel"){ lookEditing = false; lookDraft = null; render(); return; }
+  if (t.id === "look-save"){ const look = activeLook(); lookAsk = {title:"Save " + look.name + " on this phone?", yes:"Save it", run(){ state.looks[state.lookOn] = JSON.parse(JSON.stringify(look)); lookEditing = false; lookDraft = null; save(); }}; render(); return; }
+  if (t.dataset.lookOn){ const index = Number(t.dataset.lookOn); if (index !== state.lookOn){ lookAsk = {title:"Use " + state.looks[index].name + "?", yes:"Use it", run(){ state.lookOn = index; lookEditing = false; lookDraft = null; save(); }}; render(); } return; }
+  if (t.dataset.lookChoice && lookEditing && lookDraft){ const parts = t.dataset.lookChoice.split(":"); lookDraft[parts[0]] = parts[0] === "scale" ? Number(parts[1]) : parts[1]; render(); return; }
+  if (t.dataset.lookMove && lookEditing && lookDraft){ const parts = t.dataset.lookMove.split(":").map(Number); const next = parts[0] + parts[1]; if (next >= 0 && next < lookDraft.sections.length){ const swap = lookDraft.sections[next]; lookDraft.sections[next] = lookDraft.sections[parts[0]]; lookDraft.sections[parts[0]] = swap; render(); } return; }
+  if (t.dataset.lookHide && lookEditing && lookDraft){ lookDraft.sections = lookDraft.sections.filter(id => id !== t.dataset.lookHide); render(); return; }
+  if (t.dataset.lookShow && lookEditing && lookDraft){ lookDraft.sections.push(t.dataset.lookShow); render(); return; }
+  if (t.id === "look-download"){ downloadLook(activeLook()); return; }
   if (t.id === "save-profile"){
     const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
     const link = document.createElement("a");
@@ -1208,6 +1352,7 @@ view.addEventListener("input", (event) => {
   }
   if (event.target.id === "speed"){ state.settings.speed = Number(event.target.value) / 100; save(); }
   if (event.target.id === "pitch"){ state.settings.pitch = Number(event.target.value) / 100; save(); }
+  if (event.target.id === "volume"){ state.settings.volume = Number(event.target.value) / 100; save(); }
   if (event.target.id === "note-title"){ noteNow().title = event.target.value.slice(0, 40); save(); }
   if (event.target.id === "note-body"){
     if (noteReading) pauseNote();
@@ -1218,7 +1363,12 @@ view.addEventListener("input", (event) => {
     save();
     paintNote();
   }
-  if (event.target.dataset.field){
+  if (event.target.dataset.look && lookEditing && lookDraft){
+    lookDraft[event.target.dataset.look] = event.target.value;
+    paintLook(lookDraft);
+  }
+  if (event.target.id === "look-name" && lookDraft){ lookDraft.name = event.target.value.slice(0, 24); }
+  if (event.target.id === "look-overlay" && lookDraft){ lookDraft.overlay = Number(event.target.value); const label = event.target.previousSibling; }
     mine()[event.target.dataset.field] = event.target.value.slice(0, 240);
     if (event.target.dataset.field === "preferred" || event.target.dataset.field === "fullName"){
       const profile = mine();
@@ -1234,13 +1384,26 @@ view.addEventListener("input", (event) => {
   if (event.target.id === "name"){ state.settings.name = event.target.value; save(); }
 });
 view.addEventListener("change", (event) => {
-  if (event.target.id !== "restore-profile" || !event.target.files || !event.target.files[0]) return;
-  event.target.files[0].text().then(text => {
+  if (event.target.id !== "restore-profile" && event.target.id !== "look-file") return;
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (event.target.id === "look-file"){
+    file.text().then(text => {
+      try {
+        const parsed = JSON.parse(text);
+        const next = tidyLook(parsed.look || parsed, looksNow());
+        lookAsk = {title:"Replace " + looksNow().name + " with " + next.name + "?", yes:"Replace it", run(){ state.looks[state.lookOn] = next; lookEditing = false; lookDraft = null; save(); }};
+      } catch (error) { notice = "That file is not a Speak Well look."; }
+      render();
+    });
+    return;
+  }
+  file.text().then(text => {
     try {
       const next = JSON.parse(text);
       if (!next || typeof next !== "object") throw new Error("bad");
       if (next.profile && !next.settings){ state.profile = next.profile; mine(); }
-      else if (next.settings){ Object.assign(state, next); state.settings = Object.assign({presetId:"nora"}, next.settings); mine(); book(); }
+      else if (next.settings){ Object.assign(state, next); state.settings = Object.assign({presetId:"nora"}, next.settings); mine(); book(); looksNow(); }
       else throw new Error("bad");
       save();
       notice = "Her information is back on this phone.";
