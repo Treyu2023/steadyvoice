@@ -2,69 +2,81 @@
 <html lang="en" data-theme="night">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f3eee6">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#12110f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Speak Well">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
 <title>Speak Well</title>
 <style>
-  :root { color-scheme: light; --paper:#f3eee6; --ink:#1c1916; --card:#fffdf9; --line:#e4d9cc; --muted:#4a433c; --teal:#0e6b62; --mark:#0c5c55; --soft:#e5f3f1; --rose:#8e2f2f; --rose-soft:#f8e8e4; --on:#f3fffc; --on-rose:#fff8f6; }
+  :root { color-scheme: light; --paper:#f3eee6; --ink:#1c1916; --card:#fffdf9; --line:#e4d9cc; --muted:#4a433c; --teal:#0e6b62; --mark:#0c5c55; --soft:#e5f3f1; --rose:#8e2f2f; --rose-soft:#f8e8e4; --on:#f3fffc; --on-rose:#fff8f6; --dock-h: 0px; --dock-gap: max(.75rem, env(safe-area-inset-bottom)); --hit: 3rem; }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; touch-action: manipulation; scroll-padding-top: env(safe-area-inset-top); scroll-padding-bottom: calc(var(--dock-h) + var(--dock-gap) + .5rem); }
   html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Segoe UI", "Helvetica Neue", sans-serif; }
-  body { max-width: 32rem; margin: 0 auto; min-height: 100dvh; padding: max(.75rem, env(safe-area-inset-top)) .85rem 11rem; }
-  button, input, textarea { font: inherit; color: inherit; }
-  button { cursor: pointer; border: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  h1 { font-size: 1.6rem; margin: 0; }
-  .kicker { margin: .2rem 0 .35rem; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--mark); font-weight: 700; }
+  body { max-width: 32rem; margin: 0 auto; min-height: 100vh; min-height: 100dvh; overflow-x: clip; padding: max(.75rem, env(safe-area-inset-top)) max(.85rem, env(safe-area-inset-right)) calc(var(--dock-h) + var(--dock-gap)) max(.85rem, env(safe-area-inset-left)); }
+  button, input, textarea, select, a { font: inherit; color: inherit; touch-action: manipulation; }
+  button { cursor: pointer; border: 0; -webkit-tap-highlight-color: transparent; min-height: var(--hit); min-width: var(--hit); padding: .55rem .9rem; }
+  h1 { font-size: 1.6rem; margin: 0; line-height: 1.15; }
+  p, button, a, h1, h2, label { overflow-wrap: break-word; }
+  .kicker { margin: .2rem 0 .35rem; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; color: var(--mark); font-weight: 700; }
   .row { display: flex; justify-content: space-between; align-items: flex-end; gap: .5rem; flex-wrap: wrap; }
   .row > * { min-width: 0; }
-  .row input, .row textarea { width: auto; flex: 1 1 8rem; margin-bottom: 0; }
+  .row > button { flex: 0 0 auto; min-width: var(--hit); min-height: var(--hit); }
+  .row input, .row textarea { width: auto; flex: 1 1 12rem; margin-bottom: 0; }
   .tabs, .grid, .dock, .voices { display: grid; gap: .5rem; }
   .tabs { grid-template-columns: repeat(4, 1fr); margin: .75rem 0; }
   .grid, .voices { grid-template-columns: 1fr 1fr; }
-  .dock { grid-template-columns: repeat(4, 1fr); }
+  .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .dock { grid-template-columns: 1fr 1fr; }
   button, .card { border-radius: 1rem; }
-  .tab, .ghost, .voice, .pad, .dock button, .wide { min-height: 2.75rem; }
+  .tab, .ghost, .voice, .pad, .dock button, .wide, .chip, .callbtn, .pick, a.wide, label.wide { min-height: var(--hit); }
   .tab { background: var(--card); color: var(--muted); box-shadow: inset 0 0 0 1px var(--line); font-weight: 650; }
   .tab.on, .voice.on { background: var(--ink); color: var(--paper); box-shadow: none; }
-  .callbtn { border-radius: 999px; min-height: 3rem; padding: 0 1rem; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); font-weight: 700; }
-  .callbtn.on { background: var(--teal); color: var(--on); box-shadow: none; }
-  .pad { min-height: 5.4rem; padding: .7rem .75rem; text-align: left; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); overflow-wrap: anywhere; }
+  .callbtn { border-radius: 999px; min-height: 3.25rem; padding: 0 1rem; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); font-weight: 700; }
+  .pad { min-height: 5.6rem; min-width: 0; padding: .75rem .8rem; text-align: left; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); overflow-wrap: anywhere; }
   .pad b { display: block; font-size: 1.08rem; line-height: 1.2; color: inherit; }
   .pad-meta, .muted, .card p { color: var(--muted); }
   .emo { display: block; font-size: 1.45rem; line-height: 1.15; margin-bottom: .15rem; }
   .pad.urgent { background: var(--rose); color: var(--on-rose); box-shadow: none; }
   .pad.urgent b, .pad.urgent .pad-meta, .pad.urgent .emo { color: var(--on-rose); }
   .pad.need { background: var(--soft); color: var(--ink); }
-  .pad.need b, .pad.need .emo { color: var(--ink); }
-  .lead, .card { font-size: .95rem; line-height: 1.45; }
+  .pad.need b, .pad.need .emo, .pad.need .pad-meta { color: var(--ink); }
+  .lead, .card { font-size: 1rem; line-height: 1.45; }
   .card { background: var(--card); padding: 1rem; box-shadow: inset 0 0 0 1px var(--line); margin-bottom: .75rem; }
+  .wide, .pad, .seg button, .actions button, footer button { min-width: 0; }
   .wide { width: 100%; font-weight: 700; }
+  a.wide, label.wide { display: flex; align-items: center; justify-content: center; text-decoration: none; }
   .teal { background: var(--teal); color: var(--on); }
   .ink { background: var(--ink); color: var(--paper); }
   .rose { background: var(--rose); color: var(--on-rose); }
   .ghost { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
-  input, textarea { width: 100%; border: 0; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); border-radius: .9rem; padding: .75rem; margin-bottom: .5rem; }
+  input, textarea, select { width: 100%; border: 0; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); border-radius: .9rem; padding: .75rem; margin-bottom: .5rem; font-size: max(16px, 1em); }
   textarea { min-height: 6rem; }
-  .chips { display: flex; gap: .4rem; overflow: auto; margin-bottom: .6rem; }
-  .chip { border-radius: 999px; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); padding: .45rem .8rem; min-height: 2.75rem; white-space: nowrap; }
+  input[type="color"] { min-height: var(--hit); min-width: var(--hit); padding: .25rem; }
+  input[type="range"] { min-height: var(--hit); padding: 0 .25rem; margin: .35rem 0; accent-color: var(--teal); touch-action: pan-y; }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; overflow: visible; margin-bottom: .6rem; }
+  .chip { border-radius: 999px; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); padding: .55rem .95rem; min-height: var(--hit); max-width: 100%; white-space: normal; text-align: center; }
   .chip.on { background: var(--teal); color: var(--on); box-shadow: none; }
-  .emo-btn { font-size: 1.35rem; min-width: 2.75rem; line-height: 1; }
-  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin: 0 0 .7rem; }
-  .seg button { min-height: 3.1rem; font-weight: 750; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+  .emo-btn { font-size: 1.35rem; min-width: var(--hit); min-height: var(--hit); line-height: 1; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: 0 0 .7rem; }
+  .seg button { min-height: 3.5rem; font-weight: 750; font-size: 1.05em; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
   .seg button.on { background: var(--ink); color: var(--paper); box-shadow: none; }
-  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin: .35rem 0 .7rem; }
-  .actions button { min-height: 3.25rem; margin: 0; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .35rem 0 .7rem; }
+  .actions button { min-height: 3.6rem; margin: 0; font-size: 1.05em; }
   .count { font-weight: 700; }
   .stack > * + * { margin-top: .35rem; }
-  .note { background: var(--soft); border-radius: .9rem; padding: .7rem .8rem; margin-bottom: .6rem; }
+  .note { background: var(--soft); color: var(--ink); border-radius: .9rem; padding: .7rem .8rem; margin-bottom: .6rem; }
   .speak { background: var(--ink); color: var(--paper); border-radius: .9rem; padding: .7rem .8rem; margin-bottom: .6rem; }
-  footer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); padding: .5rem 1rem max(.6rem, env(safe-area-inset-bottom)); }
-  footer .wrap { max-width: 32rem; margin: 0 auto; display: grid; gap: .4rem; }
+  footer { position: fixed; z-index: 5; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); padding: .5rem max(1rem, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(1rem, env(safe-area-inset-left)); }
+  footer .wrap { max-width: 32rem; margin: 0 auto; display: grid; gap: .45rem; }
+  footer .dock button { min-height: 3.25rem; }
   .hide { display: none; }
   ol { margin: .4rem 0 0; padding-left: 1.1rem; }
   html[data-theme="night"] { color-scheme: dark; --paper:#12110f; --ink:#fff8ef; --card:#2c2622; --line:#a89886; --muted:#e4d7c8; --teal:#7ee8d8; --mark:#b6fff2; --soft:#1a3330; --rose:#ffb4a8; --rose-soft:#3a2422; --on:#10211e; --on-rose:#3b1210; }
-  input, textarea, select { color: var(--ink); background: var(--card); }
-  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   html[data-font="plain"] body { font-family: "Segoe UI", sans-serif; }
   html[data-font="serif"] body { font-family: Georgia, serif; }
   html[data-font="rounded"] body { font-family: "Segoe UI", "Trebuchet MS", sans-serif; }
@@ -79,18 +91,22 @@
   html[data-texture="linen"] body { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 7px), repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 9px); }
   html[data-texture="dots"] body { background-image: radial-gradient(var(--line) .8px, transparent .9px); background-size: 14px 14px; }
   html[data-motion="still"] * { animation: none !important; transition: none !important; }
-  .tools { display:flex; flex-wrap:wrap; gap:.4rem; margin:.4rem 0 .6rem; }
+  .tools { display:flex; flex-wrap:wrap; gap:.5rem; margin:.4rem 0 .6rem; }
   #sound { margin: 0 0 .7rem; }
-  #sound .pick { min-height: 3.4rem; text-align: left; }
+  #sound .pick { min-height: 3.6rem; min-width: 0; text-align: left; }
   #sound .pick.on-speaker { background: var(--teal); color: var(--on); border-color: transparent; }
   #sound .pick.on-call { background: var(--rose); color: var(--on-rose); border-color: transparent; }
-  @media (max-width: 420px) {
-    h1 { font-size: 1.4rem; }
-    .voices { grid-template-columns: 1fr; }
-    .dock { grid-template-columns: 1fr 1fr; }
-    footer .dock:first-child { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  #sound .sub { display: block; font-size: .85rem; font-weight: 500; opacity: .85; }
+  @media (max-width: 520px) {
+    h1 { font-size: 1.45rem; }
+    .voices, .cols-3 { grid-template-columns: 1fr 1fr; }
+    .row:has(input:not([type="range"]):not([type="color"])) { flex-direction: column; align-items: stretch; }
+    .row:has(input:not([type="range"]):not([type="color"])) > button,
+    .row:has(input:not([type="range"]):not([type="color"])) > input { width: 100%; flex: 1 1 auto; }
   }
-  #sound .sub { display: block; font-size: .75rem; font-weight: 500; opacity: .85; }
+  @media (max-width: 360px) {
+    .seg, .actions, .grid, .voices, .cols-3 { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -171,7 +187,7 @@ const MALE = /\bmale\b|\bdavid\b|\bdaniel\b|\balex\b|\bfred\b|\bguy\b|\bgeorge\b
 const KEY = "speakwell.call.v2";
 const $= (s,r=document) => r.querySelector(s);
 const view = $("#view");
-let tab = "menu", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false, guideOn = false, guideStep = 0;
+let tab = "menu", group = "All", query = "", draft = "", speaking = "", notice = "", arranging = false, soundOpen = false, detectedCall = false, guideOn = false, guideStep = 0, guideStick = false, deferredInstall = null, layoutKey = "";
 let state = load();
 function talkStamp(at){ return new Date(at).toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
 function ensureTalks(){
@@ -296,7 +312,7 @@ function typingPack(){
   return { words: wordHits, phrases: phraseHits };
 }
 function hintRow(items, kind){
-  return `<div class="chips" id="${kind}-line" style="flex-wrap:nowrap;overflow-x:auto">${items.map(item => `<button class="chip" data-suggest="${esc(item)}" data-kind="${kind}" type="button">${esc(item)}</button>`).join("")}</div>`;
+  return `<div class="chips" id="${kind}-line">${items.map(item => `<button class="chip" data-suggest="${esc(item)}" data-kind="${kind}" type="button">${esc(item)}</button>`).join("")}</div>`;
 }
 function migrateKeys(){
   // One-time copy from the old key names. Copies only when the new key is absent; the old key is never removed.
@@ -405,7 +421,7 @@ function notepad(){
   const picks = notes.slots.map(item => `<button class="${item.id === notes.active ? "ink" : "ghost"}" data-slot="${item.id}" type="button">${esc(item.title || "Slot")}</button>`).join("");
   const list = lines.map((item, index) => `<button class="wide ${index === at && at < lines.length ? "ink" : "ghost"}" data-jump="${index}" type="button" style="margin-top:.35rem"><b>${index === at && at < lines.length ? "Here" : index + 1}</b> ${esc(item)}</button>`).join("");
   return `<p class="muted">Write the conversation first. The phone says it one line at a time. Pause, use another button, then continue on the same line. All three slots stay on this phone.</p>
-    <div class="grid" style="margin:.5rem 0;grid-template-columns:1fr 1fr 1fr">${picks}</div>
+    <div class="grid cols-3" style="margin:.5rem 0">${picks}</div>
     <label for="note-title">Name</label>
     <input id="note-title" value="${esc(slot.title)}">
     <label for="note-body">The words</label>
@@ -892,7 +908,7 @@ function about(){
     <div class="chips">${says}</div>
     ${fold("who", "Who I am", box("preferred", "What people call me", "First name") + box("fullName", "Full name", "First and last") + box("birth", "Date of birth", "Month day, year") + box("phone", "Phone", "Her number") + box("email", "Email", "name@email.com") + box("hobbies", "Hobbies", "Gardening, music") + box("color", "Favorite color", "Blue"))}
     ${fold("home", "Home, car, and license", box("address", "Street address", "123 Main Street") + box("city", "City and state", "Town, state") + box("license", "Driver's license number", "License number") + box("plate", "License plate", "ABC-1234") + box("vehicle", "Car", "Blue Honda, 2014"))}
-    ${fold("health", "Health", `<p class="kicker">Diabetic?</p><div class="grid" style="grid-template-columns:1fr 1fr 1fr">${["yes","Yes","no","No","unsure","Not sure"].reduce((html, item, index, all) => index % 2 ? html + `<button class="${p.diabetic===all[index-1]?"ink":"ghost"}" data-diabetic="${all[index-1]}" type="button">${item}</button>` : html, "")}</div>` + box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + `<p><b>Medicine alarm</b></p><p class="muted">Add a name, an amount, and a time. Allow alerts, then install Speak Well. The phone can ring after the app is closed. Tap the alert and it says the medicine twice.</p><input id="med-name" placeholder="Medicine name"><input id="med-amount" placeholder="Amount, like 10 mg"><input id="med-time" type="time" value="08:00"><button class="wide ink" id="add-dose" type="button">Add this medicine</button><button class="wide ghost" id="allow-alerts" type="button">Allow phone alerts</button>` + (p.doses || []).map(dose => `<div class="card"><b>${esc(dose.name || "")}</b> ${esc(dose.amount || "")}<p class="muted">${esc((dose.times || []).join(", ") || "No time yet")}</p><button class="ghost" data-dose-sound="${esc(dose.id)}" type="button">${dose.sound === false ? "Ringtone off" : "Ringtone on"}</button><button class="ghost" data-dose-vibrate="${esc(dose.id)}" type="button">${dose.vibrate === false ? "Vibrate off" : "Vibrate on"}</button><button class="wide ghost" data-test-dose="${esc(dose.id)}" type="button">Test alarm</button><button class="wide ghost" data-drop-dose="${esc(dose.id)}" type="button">Remove</button></div>`).join("") + box("medicines", "Other medicine notes", "Anything the alarm does not cover") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
+    ${fold("health", "Health", `<p class="kicker">Diabetic?</p><div class="grid cols-3">${["yes","Yes","no","No","unsure","Not sure"].reduce((html, item, index, all) => index % 2 ? html + `<button class="${p.diabetic===all[index-1]?"ink":"ghost"}" data-diabetic="${all[index-1]}" type="button">${item}</button>` : html, "")}</div>` + box("blood", "Blood type", "O positive") + box("allergies", "Allergies", "Penicillin, or none") + `<p><b>Medicine alarm</b></p><p class="muted">Add a name, an amount, and a time. Allow alerts, then install Speak Well. The phone can ring after the app is closed. Tap the alert and it says the medicine twice.</p><input id="med-name" placeholder="Medicine name"><input id="med-amount" placeholder="Amount, like 10 mg"><input id="med-time" type="time" value="08:00"><button class="wide ink" id="add-dose" type="button">Add this medicine</button><button class="wide ghost" id="allow-alerts" type="button">Allow phone alerts</button>` + (p.doses || []).map(dose => `<div class="card"><b>${esc(dose.name || "")}</b> ${esc(dose.amount || "")}<p class="muted">${esc((dose.times || []).join(", ") || "No time yet")}</p><button class="ghost" data-dose-sound="${esc(dose.id)}" type="button">${dose.sound === false ? "Ringtone off" : "Ringtone on"}</button><button class="ghost" data-dose-vibrate="${esc(dose.id)}" type="button">${dose.vibrate === false ? "Vibrate off" : "Vibrate on"}</button><button class="wide ghost" data-test-dose="${esc(dose.id)}" type="button">Test alarm</button><button class="wide ghost" data-drop-dose="${esc(dose.id)}" type="button">Remove</button></div>`).join("") + box("medicines", "Other medicine notes", "Anything the alarm does not cover") + box("conditions", "Important health facts", "I had a stroke.") + box("doctor", "Doctor", "Name") + box("doctorPhone", "Doctor phone", "Office number") + box("pharmacy", "Pharmacy", "Name and town") + box("insurance", "Insurance", "Plan name") + box("memberId", "Member number", "From the card"))}
     ${fold("people", "People", box("emergencyName", "Emergency contact", "Name") + box("emergencyRelation", "Who they are", "Sister, neighbor") + box("emergencyPhone", "Their phone", "Number") + people + `<button class="wide ink" id="add-person" type="button">Add a person</button>`)}
     ${fold("remember", "Remember for later", `<p class="muted">Short things. Appointments, where the car is, what she meant to say.</p><div class="row"><input id="memory" placeholder="Remember…"><button class="ink" id="add-memory" type="button">Save</button></div>${memories}`)}
     <button class="wide ink" id="save-profile" type="button">Save a copy of my information</button>
@@ -1147,9 +1163,9 @@ function lookPage(){
   }).join("");
   const hidden = HOME_SECTIONS.filter(row => row[0] !== "guide" && !current.sections.includes(row[0])).map(row => `<button class="wide ghost" data-look-show="${row[0]}" type="button">Show ${esc(row[1])}</button>`).join("");
   const cards = looks.map((look, index) => `<button class="${index===state.lookOn?"ink":"ghost"}" data-look-on="${index}" type="button">${esc(look.name)}</button>`).join("");
-  const ask = lookAsk ? `<div class="card" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:9"><p style="font-size:1.2rem;font-weight:650">${esc(lookAsk.title)}</p><button class="wide teal" id="look-yes" type="button">${esc(lookAsk.yes)}</button><button class="wide ghost" id="look-no" type="button">Not now</button></div>` : "";
-  return `<p class="muted">Three looks stay on this phone. Change one only after you mean to. Save asks again.</p>
-    <div class="grid" style="grid-template-columns:1fr 1fr 1fr">${cards}</div>
+  const ask = lookAsk ? `<div class="card" id="look-ask"><p style="font-size:1.2rem;font-weight:650">${esc(lookAsk.title)}</p><button class="wide teal" id="look-yes" type="button">${esc(lookAsk.yes)}</button><button class="wide ghost" id="look-no" type="button">Not now</button></div>` : "";
+  return `${ask}<p class="muted">Three looks stay on this phone. Change one only after you mean to. Save asks again.</p>
+    <div class="grid cols-3">${cards}</div>
     ${lookEditing ? `<button class="wide teal" id="look-save" type="button">Save this look</button><button class="wide ghost" id="look-cancel" type="button">Cancel</button>` : `<button class="wide ink" id="look-edit" type="button">Change this look</button>`}
     <label>Name<input id="look-name" value="${esc(current.name)}" ${lookEditing?"":"disabled"}></label>
     ${swatch("paper","Background")}${swatch("card","Cards")}${swatch("ink","Text")}${swatch("muted","Quiet text")}${swatch("accent","Buttons")}${swatch("line","Borders")}
@@ -1166,8 +1182,7 @@ function lookPage(){
     <label class="wide ghost" style="display:flex;align-items:center;justify-content:center">Load a look file<input id="look-file" type="file" accept="application/json" style="display:none"></label>
     <p class="kicker">Free voices</p>
     <a class="wide ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://play.google.com/store/apps/details?id=com.google.android.tts">Google voice</a>
-    <a class="wide ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://play.google.com/store/apps/details?id=com.github.olga_yakovleva.rhvoice.android">RHVoice, mostly free</a>
-    ${ask}`;
+    <a class="wide ghost" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://play.google.com/store/apps/details?id=com.github.olga_yakovleva.rhvoice.android">RHVoice, mostly free</a>`;
 }
 async function downloadLook(look){
   const blob = new Blob([JSON.stringify({app:"Speak Well", look}, null, 2)], {type:"application/json"});
@@ -1187,6 +1202,15 @@ async function downloadLook(look){
   link.click();
 }
 
+function fitDock(){
+  const footer = document.querySelector("footer");
+  if (!footer) return;
+  const shown = footer.style.display !== "none" && getComputedStyle(footer).display !== "none";
+  const height = shown ? Math.ceil(footer.getBoundingClientRect().height) : 0;
+  const root = document.documentElement;
+  root.style.setProperty("--dock-h", height + "px");
+  root.style.setProperty("--dock-gap", shown ? "0.75rem" : "max(0.75rem, env(safe-area-inset-bottom))");
+}
 function render(){
   paintLook(activeLook());
   renderSound();
@@ -1217,17 +1241,17 @@ function render(){
     "Add a medicine and a time. Tap Allow phone alerts. Install Speak Well so the alarm can ring after the app is closed. Tap the alert. Speak Well says the medicine twice.",
     "Tap Home to come back. Tap Stop if the voice should be quiet. Help is on the home screen if you need the steps again."
   ];
-  const guide = guideOn ? `<div class="card" style="position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:8"><p class="kicker">Step ${guideStep + 1} of ${steps.length}</p><p style="font-size:1.2rem;font-weight:650">${esc(steps[guideStep] || "")}</p><button class="wide teal" id="guide-next" type="button">${guideStep >= steps.length - 1 ? "Done" : "Next"}</button><button class="wide ghost" id="guide-skip" type="button">Skip</button></div>` : "";
-  if (tab === "menu") view.innerHTML = banner + menu() + guide;
-  else if (tab === "board") view.innerHTML = banner + board() + guide;
-  else if (tab === "say") view.innerHTML = banner + typer() + guide;
-  else if (tab === "notes") view.innerHTML = banner + notepad() + guide;
-  else if (tab === "about") view.innerHTML = banner + about() + guide;
-  else if (tab === "people") view.innerHTML = banner + peoplePage() + guide;
-  else if (tab === "help") view.innerHTML = banner + helpPage() + guide;
-  else if (tab === "look") view.innerHTML = banner + lookPage() + guide;
-  else if (tab === "call") view.innerHTML = banner + call() + guide;
-  else view.innerHTML = banner + more() + guide;
+  const guide = guideOn ? `<div class="card" id="guide"><p class="kicker">Step ${guideStep + 1} of ${steps.length}</p><p style="font-size:1.2rem;font-weight:650">${esc(steps[guideStep] || "")}</p><button class="wide teal" id="guide-next" type="button">${guideStep >= steps.length - 1 ? "Done" : "Next"}</button><button class="wide ghost" id="guide-skip" type="button">Skip</button></div>` : "";
+  const page = tab === "menu" ? menu() : tab === "board" ? board() : tab === "say" ? typer() : tab === "notes" ? notepad() : tab === "about" ? about() : tab === "people" ? peoplePage() : tab === "help" ? helpPage() : tab === "look" ? lookPage() : tab === "call" ? call() : more();
+  view.innerHTML = guide + banner + page;
+  fitDock();
+  requestAnimationFrame(fitDock);
+  layoutKey = layoutNow();
+  if (guideStick) {
+    guideStick = false;
+    const card = document.getElementById("guide");
+    if (card) card.scrollIntoView({block: "start"});
+  }
   if (tab === "say") bindComposer();
 }
 function paintHints(){
@@ -1264,9 +1288,10 @@ function bindComposer(){
     bar.style.bottom = up ? overlap + "px" : "";
     bar.style.zIndex = up ? "30" : "";
     bar.style.background = up ? "var(--paper)" : "";
-    bar.style.padding = up ? ".5rem 1rem .6rem" : "";
+    bar.style.padding = up ? ".6rem max(1rem, env(safe-area-inset-right)) max(.6rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left))" : "";
     const footer = document.querySelector("footer");
     if (footer) footer.style.display = document.activeElement === box ? "none" : "";
+    fitDock();
     box.scrollTop = box.scrollHeight;
   };
   box.addEventListener("focus", place);
@@ -1281,7 +1306,8 @@ function menu(){
   const look = looksNow();
   const rows = look.sections.map(id => HOME_SECTIONS.find(row => row[0] === id)).filter(Boolean);
   const installed = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-  const setup = installed ? "" : `<div class="card"><b>Put this on the phone</b><p>In Chrome, tap the three dots. Tap Install app, or Add to Home screen. Open Speak Well from that icon next time. Then tap Allow phone alerts so medicine alarms can ring after the app is closed.</p></div>`;
+  const installBtn = (!installed && deferredInstall) ? `<button class="wide teal" id="install-app" type="button">Install Speak Well</button>` : "";
+  const setup = installed ? "" : `<div class="card"><b>Put this on the phone</b><p>In Chrome, tap Install Speak Well if it is on this screen. If not, tap the three dots, then Install app or Add to Home screen. On iPhone, use Share, then Add to Home Screen. Open Speak Well from that icon next time. Then tap Allow phone alerts so medicine alarms can ring after the app is closed.</p>${installBtn}</div>`;
   return setup + rows.map(row => `<button class="wide" data-go="${row[0]}" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>${row[1]}</b><br><span class="muted">${row[2]}</span></button>`).join("")
     + `<button class="wide" data-go="look" type="button" style="display:block;width:100%;text-align:left;margin-bottom:.45rem"><b>Look</b><br><span class="muted">Colors, texture, type, borders, and home order.</span></button>`
     + `<button class="wide ghost" data-go="emergency" type="button" style="display:block;width:100%;text-align:left;margin-top:1rem"><b>Emergency</b><br><span class="muted">Only if she needs help right now.</span></button>`;
@@ -1331,7 +1357,10 @@ function board(){
       <button class="chip" id="dock" type="button">${state.settings.showDock===false?"Yes/No bar off":"Yes/No bar on"}</button>
     </div></div>` : `<p class="muted">${channelName()==="text" ? "Tap a button. Messages opens with that sentence. She taps Send." : "Tap a button. The phone says the full sentence."}</p>`;
   const chips = state.settings.showChips === false ? "" : `<div class="chips">${groups.map(g => `<button class="chip${g===group?" on":""}" data-group="${g}" type="button">${g}</button>`).join("")}</div>`;
-  const cols = state.settings.columns === 1 ? "minmax(0,1fr)" : state.settings.columns === 3 ? "repeat(3,minmax(0,1fr))" : "repeat(2,minmax(0,1fr))";
+  let colCount = state.settings.columns === 1 ? 1 : state.settings.columns === 3 ? 3 : 2;
+  if (colCount > 1 && window.matchMedia("(max-width: 360px)").matches) colCount = 1;
+  else if (colCount === 3 && window.matchMedia("(max-width: 520px)").matches) colCount = 2;
+  const cols = colCount === 1 ? "minmax(0,1fr)" : colCount === 3 ? "repeat(3,minmax(0,1fr))" : "repeat(2,minmax(0,1fr))";
   const cards = list.map((p, index) => arranging
     ? `<div class="pad ${p.tone}"><b>${esc(p.label)}</b><div class="tools"><button class="chip" data-move="${esc(p.id)}" data-dir="-1" type="button" ${index===0?"disabled":""}>Up</button><button class="chip" data-move="${esc(p.id)}" data-dir="1" type="button" ${index===list.length-1?"disabled":""}>Down</button><button class="chip" data-hide="${esc(p.id)}" type="button">Hide</button></div></div>`
     : `<button class="pad ${p.tone}" data-id="${esc(p.id)}" data-speak="${esc(p.speak)}" type="button" aria-label="${esc(emojiFor(p) + " " + p.label + ". " + p.speak)}">${padFace(p)}</button>`).join("");
@@ -1387,7 +1416,7 @@ function typer(){
   const options = fold("speak", "Typing and extras", `<button class="wide ghost" id="word-line" type="button">${wordOn ? "Word line is on" : "Word line is off"}</button><button class="wide ghost" id="phrase-toggle" type="button">${phraseOn ? "Phrase line is on" : "Phrase line is off"}</button><button class="wide ghost" id="pin-box" type="button">${pinOn ? "Box stays above the keyboard" : "Box stays in place"}</button><button class="wide ${from==="both"?"ink":"ghost"}" data-from="both" type="button">Board and words from this channel</button><button class="wide ${from==="said"?"ink":"ghost"}" data-from="said" type="button">Only words from this channel</button><button class="wide ${from==="board"?"ink":"ghost"}" data-from="board" type="button">Only board phrases</button><button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button>`);
   return `${channelBar()}${freqBlock("speak")}${freqBlock("text")}<button class="wide" data-go="notes" type="button" style="text-align:left;margin-bottom:.6rem"><b>Notepad</b><br><span class="muted">Write a long script. Pause it, then start again on the same line.</span></button>
     <label for="box">Words to say or text</label>
-    <div class="chips" style="flex-wrap:nowrap;overflow-x:auto">${LANGS.map(([id,label]) => `<button class="chip${(state.settings.outputLang||"en")===id?" on":""}" data-lang="${id}" type="button">${label}</button>`).join("")}</div>
+    <div class="chips">${LANGS.map(([id,label]) => `<button class="chip${(state.settings.outputLang||"en")===id?" on":""}" data-lang="${id}" type="button">${label}</button>`).join("")}</div>
     <p class="note">Translation sends the phrase to MyMemory (an online service).</p>
     <p class="muted" id="gloss"></p>
     <div id="composer">
@@ -1463,7 +1492,7 @@ view.addEventListener("click", (event) => {
   const t = event.target.closest("button");
   if (!t) return;
   if (t.dataset.go){
-    if (t.dataset.go === "guide"){ guideOn = true; guideStep = 0; render(); return; }
+    if (t.dataset.go === "guide"){ guideOn = true; guideStep = 0; guideStick = true; render(); return; }
     if (t.dataset.go === "talks"){ tab = "more"; openTalk = ""; render(); return; }
     if (t.dataset.go === "emergency"){ tab = "board"; folds.emergency = true; render(); return; }
     tab = t.dataset.go;
@@ -1553,9 +1582,17 @@ view.addEventListener("click", (event) => {
     if (box){ box.focus(); box.scrollTop = box.scrollHeight; }
     return;
   }
+  if (t.id === "install-app"){
+    if (!deferredInstall) return;
+    const pending = deferredInstall;
+    deferredInstall = null;
+    pending.prompt();
+    pending.userChoice.finally(() => render());
+    return;
+  }
   if (t.id === "guide-next"){
     if (guideStep >= 5){ guideOn = false; state.settings.seenTutorial = true; save(); }
-    else guideStep += 1;
+    else { guideStep += 1; guideStick = true; }
     render();
     return;
   }
@@ -1804,7 +1841,27 @@ document.addEventListener("visibilitychange", () => {
   resumeVoice();
   applyRoute();
 });
-window.addEventListener("pageshow", () => { resumeVoice(); applyRoute(); });
+window.addEventListener("pageshow", () => { resumeVoice(); applyRoute(); fitDock(); });
+function layoutNow(){
+  const width = window.innerWidth;
+  const bucket = width <= 360 ? "s" : width <= 520 ? "m" : "l";
+  return bucket + ":" + (state.settings.columns || 2);
+}
+function onResize(){
+  fitDock();
+  const next = layoutNow();
+  if (next === layoutKey) return;
+  layoutKey = next;
+  if (tab === "board") render();
+}
+window.addEventListener("resize", onResize);
+window.addEventListener("orientationchange", onResize);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", fitDock);
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstall = event;
+  if (tab === "menu") render();
+});
 ensureAudiences();
 ensureFreq();
 save();
