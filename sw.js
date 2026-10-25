@@ -1,8 +1,16 @@
-const CACHE = "speakwell-7";
-const ASSETS = ["./", "./index.html", "./SpeakWell.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
+const CACHE = "speakwell-8";
+const ASSETS = ["./", "./index.html", "./SpeakWell.html", "./privacy.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS).catch(() => undefined)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.all(ASSETS.map(async (path) => {
+      try {
+        const response = await fetch(path, {cache: "reload"});
+        if (response && response.ok) await cache.put(path, response);
+      } catch (error) {}
+    }));
+  })());
   self.skipWaiting();
 });
 
@@ -15,16 +23,35 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function isPage(url, request) {
+  return request.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith(".html");
+}
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin || event.request.method !== "GET") return;
+  if (isPage(url, event.request)) {
+    event.respondWith(
+      fetch(event.request.url, {cache: "reload", credentials: "same-origin"})
+        .then((response) => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => undefined);
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((hit) => hit || caches.match("./index.html"))),
+    );
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((hit) => {
       if (hit) return hit;
       return fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => undefined);
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(event.request, copy)).catch(() => undefined);
+          }
           return response;
         })
         .catch(() => caches.match("./index.html"));

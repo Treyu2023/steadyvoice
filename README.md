@@ -7,8 +7,9 @@ Speak Well talks when she taps a button. No store, no account, nothing to pay.
 1. On her phone, open **Chrome** and go to this address:
    https://treyu2023.github.io/steadyvoice/
    She sees the Speak Well screen with big phrase buttons.
-2. Tap **Install app** if Chrome shows it at the bottom of the screen.
+2. Tap **Install Speak Well** if that button is on the home screen.
    If not, tap the three dots **⋮** at the top right, then **Add to Home screen** (or **Install app**), then **Install** or **Add**.
+   On an iPhone, tap Share, then **Add to Home Screen**.
    She sees a small box that says Speak Well with its icon. After she taps Install, the box closes.
 3. Go to the phone's home screen and tap the **Speak Well** icon.
    Speak Well opens full screen, without the Chrome address bar. Next time, tap that same icon.
