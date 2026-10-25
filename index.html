@@ -7,15 +7,17 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Speak Well</title>
 <style>
-  :root { color-scheme: light; --paper:#f3eee6; --ink:#1c1916; --card:#fffdf9; --line:#e4d9cc; --muted:#6d645b; --teal:#0e6b62; --soft:#e5f3f1; --rose:#8e2f2f; --rose-soft:#f8e8e4; --on:#f3fffc; }
+  :root { color-scheme: light; --paper:#f3eee6; --ink:#1c1916; --card:#fffdf9; --line:#e4d9cc; --muted:#4a433c; --teal:#0e6b62; --mark:#0c5c55; --soft:#e5f3f1; --rose:#8e2f2f; --rose-soft:#f8e8e4; --on:#f3fffc; --on-rose:#fff8f6; }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Segoe UI", "Helvetica Neue", sans-serif; }
-  body { max-width: 32rem; margin: 0 auto; min-height: 100dvh; padding: max(1rem, env(safe-area-inset-top)) 1rem 8.5rem; }
+  body { max-width: 32rem; margin: 0 auto; min-height: 100dvh; padding: max(.75rem, env(safe-area-inset-top)) .85rem 11rem; }
   button, input, textarea { font: inherit; color: inherit; }
-  button { cursor: pointer; border: 0; }
+  button { cursor: pointer; border: 0; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   h1 { font-size: 1.6rem; margin: 0; }
-  .kicker { margin: 0; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); font-weight: 700; }
-  .row { display: flex; justify-content: space-between; align-items: flex-end; gap: .75rem; }
+  .kicker { margin: .2rem 0 .35rem; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--mark); font-weight: 700; }
+  .row { display: flex; justify-content: space-between; align-items: flex-end; gap: .5rem; flex-wrap: wrap; }
+  .row > * { min-width: 0; }
+  .row input, .row textarea { width: auto; flex: 1 1 8rem; margin-bottom: 0; }
   .tabs, .grid, .dock, .voices { display: grid; gap: .5rem; }
   .tabs { grid-template-columns: repeat(4, 1fr); margin: .75rem 0; }
   .grid, .voices { grid-template-columns: 1fr 1fr; }
@@ -26,31 +28,41 @@
   .tab.on, .voice.on { background: var(--ink); color: var(--paper); box-shadow: none; }
   .callbtn { border-radius: 999px; min-height: 3rem; padding: 0 1rem; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); font-weight: 700; }
   .callbtn.on { background: var(--teal); color: var(--on); box-shadow: none; }
-  .pad { min-height: 5rem; padding: .75rem; text-align: left; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
-  .pad b { display: block; font-size: 1.05rem; }
-  .pad span, .muted, .card p { color: var(--muted); }
-  .pad.urgent { background: var(--rose); color: #fff8f6; box-shadow: none; }
-  .pad.urgent span { color: #f8e8e4; }
-  .pad.need { background: var(--soft); }
+  .pad { min-height: 5.4rem; padding: .7rem .75rem; text-align: left; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); overflow-wrap: anywhere; }
+  .pad b { display: block; font-size: 1.08rem; line-height: 1.2; color: inherit; }
+  .pad-meta, .muted, .card p { color: var(--muted); }
+  .emo { display: block; font-size: 1.45rem; line-height: 1.15; margin-bottom: .15rem; }
+  .pad.urgent { background: var(--rose); color: var(--on-rose); box-shadow: none; }
+  .pad.urgent b, .pad.urgent .pad-meta, .pad.urgent .emo { color: var(--on-rose); }
+  .pad.need { background: var(--soft); color: var(--ink); }
+  .pad.need b, .pad.need .emo { color: var(--ink); }
   .lead, .card { font-size: .95rem; line-height: 1.45; }
   .card { background: var(--card); padding: 1rem; box-shadow: inset 0 0 0 1px var(--line); margin-bottom: .75rem; }
   .wide { width: 100%; font-weight: 700; }
   .teal { background: var(--teal); color: var(--on); }
   .ink { background: var(--ink); color: var(--paper); }
-  .rose { background: var(--rose); color: #fff8f6; }
+  .rose { background: var(--rose); color: var(--on-rose); }
   .ghost { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
   input, textarea { width: 100%; border: 0; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); border-radius: .9rem; padding: .75rem; margin-bottom: .5rem; }
   textarea { min-height: 6rem; }
   .chips { display: flex; gap: .4rem; overflow: auto; margin-bottom: .6rem; }
-  .chip { border-radius: 999px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); padding: .45rem .75rem; white-space: nowrap; }
+  .chip { border-radius: 999px; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); padding: .45rem .8rem; min-height: 2.75rem; white-space: nowrap; }
   .chip.on { background: var(--teal); color: var(--on); box-shadow: none; }
+  .emo-btn { font-size: 1.35rem; min-width: 2.75rem; line-height: 1; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin: 0 0 .7rem; }
+  .seg button { min-height: 3.1rem; font-weight: 750; background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+  .seg button.on { background: var(--ink); color: var(--paper); box-shadow: none; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; margin: .35rem 0 .7rem; }
+  .actions button { min-height: 3.25rem; margin: 0; }
+  .count { font-weight: 700; }
+  .stack > * + * { margin-top: .35rem; }
   .note { background: var(--soft); border-radius: .9rem; padding: .7rem .8rem; margin-bottom: .6rem; }
   .speak { background: var(--ink); color: var(--paper); border-radius: .9rem; padding: .7rem .8rem; margin-bottom: .6rem; }
   footer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); padding: .5rem 1rem max(.6rem, env(safe-area-inset-bottom)); }
   footer .wrap { max-width: 32rem; margin: 0 auto; display: grid; gap: .4rem; }
   .hide { display: none; }
   ol { margin: .4rem 0 0; padding-left: 1.1rem; }
-  html[data-theme="night"] { color-scheme: dark; --paper:#12110f; --ink:#fff8ef; --card:#2c2622; --line:#a89886; --muted:#f3e7da; --teal:#9cf3e4; --soft:#1a3330; --rose:#ffb4a8; --rose-soft:#3a2422; --on:#10211e; }
+  html[data-theme="night"] { color-scheme: dark; --paper:#12110f; --ink:#fff8ef; --card:#2c2622; --line:#a89886; --muted:#e4d7c8; --teal:#7ee8d8; --mark:#b6fff2; --soft:#1a3330; --rose:#ffb4a8; --rose-soft:#3a2422; --on:#10211e; --on-rose:#3b1210; }
   input, textarea, select { color: var(--ink); background: var(--card); }
   input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   html[data-font="plain"] body { font-family: "Segoe UI", sans-serif; }
@@ -71,7 +83,13 @@
   #sound { margin: 0 0 .7rem; }
   #sound .pick { min-height: 3.4rem; text-align: left; }
   #sound .pick.on-speaker { background: var(--teal); color: var(--on); border-color: transparent; }
-  #sound .pick.on-call { background: var(--rose); color: var(--on); border-color: transparent; }
+  #sound .pick.on-call { background: var(--rose); color: var(--on-rose); border-color: transparent; }
+  @media (max-width: 420px) {
+    h1 { font-size: 1.4rem; }
+    .voices { grid-template-columns: 1fr; }
+    .dock { grid-template-columns: 1fr 1fr; }
+    footer .dock:first-child { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  }
   #sound .sub { display: block; font-size: .75rem; font-weight: 500; opacity: .85; }
 </style>
 </head>
@@ -211,6 +229,7 @@ function saveTalk(){
   render();
 }
 ensureTalks();
+if (state.channel !== "text") state.channel = "speak";
 if (!Array.isArray(state.learned)) state.learned = [];
 if (!state.settings.themeChosen){ state.settings.theme = "night"; state.settings.themeChosen = true; save(); }
 if (!state.settings.seenTutorial) guideOn = true;
@@ -247,7 +266,7 @@ function typingPack(){
   const safe = (text) => risky || !/911|emergency/i.test(text);
   const query = String(draft || "").trim().toLowerCase();
   const token = query.split(/\s+/).pop() || "";
-  const said = (state.learned || []).filter(item => item && item.text && safe(item.text));
+  const said = ensureFreq()[channelName()].lines.filter(item => item && item.text && safe(item.text));
   const board = phrases().filter(item => item.id !== "emergency" && item.id !== "911" && safe(item.speak));
   const lines = [];
   const seen = new Set();
@@ -437,7 +456,168 @@ function renderSound(){
     </div>${hint}
     <button class="wide ghost" id="sound-more" type="button" style="margin-top:.35rem">${soundOpen ? "Hide sound options" : "Sound options"}</button>${extra}`;
 }
-function phrases(){ return PHRASES.concat(state.custom||[]); }
+const EMOJI = {
+  help:"🆘", cant:"🗣️", emergency:"🚨", "911":"📞", breathe:"💨", stop:"✋",
+  yes:"✅", no:"🚫", wait:"⏳", again:"🔁", understand:"❓", hear:"👂",
+  water:"💧", bathroom:"🚽", pain:"🩹", medicine:"💊", hungry:"🍽️", cold:"🥶",
+  tired:"😴", scared:"😨", okay:"👍", love:"❤️", thanks:"🙏",
+  nurse:"🩺", doctor:"👨‍⚕️", family:"👨‍👩‍👧", dizzy:"💫", head:"🤕"
+};
+const GROUP_EMOJI = { Urgent:"🚨", Needs:"🤲", Feelings:"💛", Talk:"💬", People:"👥", Care:"🩹" };
+const EMOJI_BAR = ["😀","😂","❤️","👍","🙏","😢","😮","🆘","💧","💊","⏳","✅","🚫","📞","👋","💤"];
+const AUDIENCE_STARTERS = {
+  friends:["yes","no","wait","thanks","okay","love","hungry","water","hear","understand","again","tired"],
+  work:["yes","no","wait","again","understand","help","hear","thanks","okay","pain","stop","cant"]
+};
+function emojiFor(phrase){
+  if (!phrase) return "💬";
+  if (phrase.emoji) return String(phrase.emoji).slice(0, 8);
+  return EMOJI[phrase.id] || GROUP_EMOJI[phrase.group] || "💬";
+}
+function kindEmoji(kind){
+  if (kind === "family") return "👨‍👩‍👧";
+  if (kind === "friends") return "👋";
+  if (kind === "work") return "💼";
+  return "⭐";
+}
+function starterIds(){ return PHRASES.map(item => item.id).filter(id => id !== "emergency" && id !== "911"); }
+function tidyPhrase(raw){
+  if (!raw || !raw.id || !raw.speak) return null;
+  return {
+    id: String(raw.id).slice(0, 40),
+    label: String(raw.label || raw.speak).slice(0, 32),
+    speak: String(raw.speak).slice(0, 240),
+    emoji: String(raw.emoji || "").slice(0, 8),
+    group: raw.group || "Talk",
+    tone: raw.tone || "talk"
+  };
+}
+function tidyAudience(raw, fallback){
+  const item = raw && typeof raw === "object" ? raw : {};
+  const known = new Set(starterIds());
+  const pins = Array.isArray(item.pins) ? item.pins.filter(id => known.has(id) || String(id).indexOf("c-") === 0) : fallback.pins.slice();
+  const custom = Array.isArray(item.custom) ? item.custom.map(tidyPhrase).filter(Boolean) : [];
+  return {
+    id: String(item.id || fallback.id).slice(0, 40),
+    name: String(item.name || fallback.name).slice(0, 24),
+    kind: item.kind === "family" || item.kind === "friends" || item.kind === "work" || item.kind === "custom" ? item.kind : fallback.kind,
+    pins: pins,
+    custom: custom,
+    hidden: Array.isArray(item.hidden) ? item.hidden.map(id => String(id)) : [],
+    order: Array.isArray(item.order) ? item.order.map(id => String(id)) : []
+  };
+}
+function ensureAudiences(){
+  const starters = starterIds();
+  if (!Array.isArray(state.audiences) || !state.audiences.length){
+    const hidden = new Set(state.hidden || []);
+    const familyPins = starters.filter(id => !hidden.has(id));
+    const customs = Array.isArray(state.custom) ? state.custom.map(tidyPhrase).filter(Boolean) : [];
+    state.audiences = [
+      { id:"family", name:"Family", kind:"family", pins: familyPins.length ? familyPins : starters.slice(), custom: customs, hidden: [], order: (state.order || []).slice() },
+      { id:"friends", name:"Friends", kind:"friends", pins: AUDIENCE_STARTERS.friends.slice(), custom: [], hidden: [], order: [] },
+      { id:"work", name:"Coworkers", kind:"work", pins: AUDIENCE_STARTERS.work.slice(), custom: [], hidden: [], order: [] }
+    ];
+    if (!state.audienceId) state.audienceId = "family";
+  }
+  const fallbacks = {
+    family: { id:"family", name:"Family", kind:"family", pins: starters.slice() },
+    friends: { id:"friends", name:"Friends", kind:"friends", pins: AUDIENCE_STARTERS.friends.slice() },
+    work: { id:"work", name:"Coworkers", kind:"work", pins: AUDIENCE_STARTERS.work.slice() }
+  };
+  state.audiences = state.audiences.map((item, index) => tidyAudience(item, fallbacks[item && item.id] || { id:"aud-" + index, name:"Custom", kind:"custom", pins:["yes","no","wait","help","thanks"] }));
+  if (!state.audiences.some(item => item.id === state.audienceId)) state.audienceId = state.audiences[0].id;
+  return state.audiences.find(item => item.id === state.audienceId);
+}
+function currentAudience(){ return ensureAudiences(); }
+function blankFreqBucket(){ return { phrases:{}, words:{}, lines:[] }; }
+function ensureFreq(){
+  const empty = !state.freq || !state.freq.speak || !state.freq.text;
+  if (empty){
+    const speak = blankFreqBucket();
+    const text = blankFreqBucket();
+    Object.keys(state.uses || {}).forEach(id => { speak.phrases[id] = Number(state.uses[id]) || 0; });
+    (state.learned || []).forEach(item => {
+      if (!item || !item.text) return;
+      const count = Number(item.count) || 1;
+      speak.lines.push({ text: String(item.text).slice(0, 180), count: count });
+      String(item.text).split(/\s+/).forEach(word => noteWord(speak, word, count));
+    });
+    speak.lines.sort((a, b) => b.count - a.count);
+    state.freq = { speak: speak, text: text };
+  }
+  ["speak","text"].forEach(name => {
+    const bucket = state.freq[name];
+    if (!bucket || typeof bucket !== "object") state.freq[name] = blankFreqBucket();
+    else {
+      bucket.phrases = bucket.phrases && typeof bucket.phrases === "object" ? bucket.phrases : {};
+      bucket.words = bucket.words && typeof bucket.words === "object" ? bucket.words : {};
+      bucket.lines = Array.isArray(bucket.lines) ? bucket.lines.filter(item => item && item.text).slice(0, 80) : [];
+    }
+  });
+  return state.freq;
+}
+function noteWord(bucket, word, count){
+  const key = String(word || "").replace(/^[^a-zA-Z0-9']+|[^a-zA-Z0-9']+$/g, "").toLowerCase();
+  if (key.length < 2 && key !== "i") return;
+  bucket.words[key] = (bucket.words[key] || 0) + (count || 1);
+}
+function channelName(){ return state.channel === "text" ? "text" : "speak"; }
+function bump(channel, text, phraseId){
+  const clean = String(text || "").trim().slice(0, 180);
+  if (!clean) return;
+  const bucket = ensureFreq()[channel === "text" ? "text" : "speak"];
+  if (phraseId) bucket.phrases[phraseId] = (Number(bucket.phrases[phraseId]) || 0) + 1;
+  const key = clean.toLowerCase();
+  const found = bucket.lines.find(item => item.text.toLowerCase() === key);
+  if (found) found.count = (found.count || 0) + 1;
+  else bucket.lines.push({ text: clean, count: 1 });
+  bucket.lines.sort((a, b) => (b.count || 0) - (a.count || 0));
+  bucket.lines = bucket.lines.slice(0, 80);
+  clean.split(/\s+/).forEach(word => noteWord(bucket, word, 1));
+  if (channel !== "text" && phraseId){
+    state.uses = state.uses || {};
+    state.uses[phraseId] = bucket.phrases[phraseId];
+  }
+}
+function everyPhrase(){
+  ensureAudiences();
+  const customs = state.audiences.flatMap(item => item.custom || []);
+  return PHRASES.concat(Array.isArray(state.custom) ? state.custom : []).concat(customs);
+}
+function phrases(){
+  const aud = currentAudience();
+  const pinned = new Set(aud.pins || []);
+  const starters = PHRASES.filter(item => pinned.has(item.id) || item.id === "emergency" || item.id === "911");
+  return starters.concat(aud.custom || []);
+}
+function padFace(phrase){
+  return `<span class="emo" aria-hidden="true">${esc(emojiFor(phrase))}</span><b>${esc(phrase.label)}</b><span class="pad-meta">${esc(phrase.group || "")}</span>`;
+}
+function channelBar(){
+  const on = channelName();
+  return `<div class="seg" role="group" aria-label="Speak or text"><button type="button" data-channel="speak" class="${on==="speak"?"on":""}" aria-pressed="${on==="speak"}">🔊 Speak</button><button type="button" data-channel="text" class="${on==="text"?"on":""}" aria-pressed="${on==="text"}">💬 Text</button></div>`;
+}
+function audienceBar(){
+  const aud = currentAudience();
+  const chips = state.audiences.map(item => `<button class="chip${item.id===aud.id?" on":""}" data-aud="${esc(item.id)}" type="button">${kindEmoji(item.kind)} ${esc(item.name)}</button>`).join("");
+  return `<div class="chips" role="group" aria-label="Who I am with">${chips}<button class="chip" data-go="people" type="button">Lists</button></div>`;
+}
+function freqBlock(channel){
+  const bucket = ensureFreq()[channel];
+  const title = channel === "text" ? "Most texted" : "Most spoken";
+  const act = channel === "text" ? "data-text" : "data-force-speak";
+  const words = Object.keys(bucket.words).map(key => [key, bucket.words[key]]).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const lines = bucket.lines.slice(0, 5);
+  const empty = !words.length && !lines.length;
+  const hint = channel === "text" ? "Nothing texted yet. Texted words stay in this list, not in Most spoken." : "Nothing spoken yet. Spoken words stay in this list, not in Most texted.";
+  const wordHtml = words.map(pair => `<button class="chip" ${act}="${esc(pair[0])}" type="button">${esc(pair[0])} <span class="count">${pair[1]}</span></button>`).join("");
+  const lineHtml = lines.map(item => `<button class="wide ghost" ${act}="${esc(item.text)}" type="button">${esc(item.text)} <span class="count">${item.count}</span></button>`).join("");
+  return `<section class="stack" aria-label="${title}"><p class="kicker">${title}</p>${empty ? `<p class="muted">${hint}</p>` : `<div class="chips">${wordHtml}</div>${lineHtml}`}</section>`;
+}
+function emojiBar(){
+  return `<div class="chips" aria-label="Emoji">${EMOJI_BAR.map(item => `<button class="chip emo-btn" data-emoji="${item}" type="button" aria-label="Add ${item}">${item}</button>`).join("")}</div>`;
+}
 function preset(){ return PRESETS.find(p => p.id === state.settings.presetId) || PRESETS[4]; }
 const COMEDY = [
   {id:"sweet", name:"Sweet", rate:0.84, pitch:1.22},
@@ -604,9 +784,8 @@ async function say(text){
   if (!clean || !window.speechSynthesis){ notice = "Open this file in Chrome so the phone can speak."; render(); return; }
   if (navigator.vibrate) navigator.vibrate(12);
   state.history = [clean].concat((state.history||[]).filter(x => x !== clean)).slice(0,12);
-  const hit = phrases().find(p => p.speak === clean);
-  state.uses = state.uses || {};
-  if (hit) state.uses[hit.id] = (state.uses[hit.id] || 0) + 1;
+  const hit = everyPhrase().find(p => p.speak === clean);
+  bump("speak", clean, hit && hit.id);
   rememberLine(clean);
   learn(clean);
   save();
@@ -636,7 +815,20 @@ async function say(text){
   applyRoute();
   render();
 }
-function textIt(text){ location.href = "sms:?&body=" + encodeURIComponent(text); }
+function smsHref(text){
+  const body = encodeURIComponent(text);
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  return ios ? "sms:&body=" + body : "sms:?body=" + body;
+}
+function textIt(text, phraseId){
+  const clean = String(text || "").trim();
+  if (!clean) return;
+  const hit = phraseId ? everyPhrase().find(p => p.id === phraseId) : everyPhrase().find(p => p.speak === clean);
+  bump("text", clean, hit && hit.id);
+  state.historyText = [clean].concat((state.historyText || []).filter(item => item !== clean)).slice(0, 12);
+  save();
+  location.href = smsHref(clean);
+}
 function wa(text){ open("https://wa.me/?text=" + encodeURIComponent(text)); }
 function mine(){
   const blank = {fullName:"", preferred:"", birth:"", phone:"", email:"", address:"", city:"", license:"", plate:"", vehicle:"", hobbies:"", color:"", blood:"", allergies:"", diabetic:"", medicines:"", conditions:"", doctor:"", doctorPhone:"", insurance:"", memberId:"", pharmacy:"", emergencyName:"", emergencyRelation:"", emergencyPhone:"", people:[], reminders:[], doses:[]};
@@ -833,13 +1025,16 @@ function helpPage(){
     <div class="card"><b>Put it on the phone</b><p>Open the link in Chrome. Tap the three dots. Tap Install app, or Add to Home screen. Next time, tap the Speak Well icon.</p></div>
     <div class="card"><b>Medicine alarm</b><p>About me, then Health. Add the name, the amount, and the time. Tap Allow phone alerts. Install the app. The phone can ring, vibrate, and show the alert after Speak Well is closed. Tap the alert and it says the medicine out loud, twice. I took it stops it for that time today.</p></div>
     <div class="card"><b>On a call</b><p>Tap Phone call at the top. On the phone's call screen, tap Speaker. Hold the phone a little away. The other person hears her through the microphone.</p></div>
+    <div class="card"><b>Text</b><p>On the board, tap Text, then a phrase. The phone opens Messages with that sentence. She taps Send. Spoken phrases and texted phrases are counted apart.</p></div>
+    <div class="card"><b>Who she is with</b><p>Home, then Who I'm with. Family, friends, and coworkers each keep their own phrases. Add a list for anyone else. It stays on this phone.</p></div>
     <div class="card"><b>If the app is reinstalled</b><p>About me, Save a copy of my information. Later, Put my information back and choose that file.</p></div>
     <button class="wide ink" data-go="guide" type="button">Show me how</button>`;
 }
 
 const HOME_SECTIONS = [
-  ["board","Say a phrase","Tap a button. The phone says the whole sentence."],
-  ["say","Type a sentence","Write words that are not on a button."],
+  ["board","Say a phrase","Tap a button. The phone says it, or opens a text."],
+  ["say","Type a sentence","Write words that are not on a button. Say them or text them."],
+  ["people","Who I'm with","Family, friends, coworkers, or a list you name."],
   ["notes","Notepad","Write it ahead. Pause, then pick up the same line."],
   ["about","About me","Address, license, people, and things to remember."],
   ["call","Phone call","So the person on the line can hear her."],
@@ -883,14 +1078,46 @@ function looksNow(){
   if (state.lookOn !== 1 && state.lookOn !== 2) state.lookOn = 0;
   return state.looks[state.lookOn];
 }
-function darkHex(hex){
+function channelOf(hex){
   const n = parseInt(String(hex).slice(1), 16);
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.55;
+  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+}
+function lum(hex){
+  const lin = channelOf(hex).map(c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+}
+function contrast(a, b){
+  const hi = Math.max(lum(a), lum(b)), lo = Math.min(lum(a), lum(b));
+  return (hi + 0.05) / (lo + 0.05);
+}
+function darkHex(hex){ return lum(hex) < 0.45; }
+function readable(prefer, backgrounds, min){
+  const floor = min || 4.5;
+  const score = (color) => Math.min.apply(null, backgrounds.map(bg => contrast(color, bg)));
+  if (prefer && score(prefer) >= floor) return prefer;
+  const light = "#fff8ef", dark = "#161311";
+  return score(light) >= score(dark) ? light : dark;
+}
+function apart(fill, bg, light, dark){
+  if (contrast(fill, bg) >= 1.55) return fill;
+  return darkHex(bg) ? light : dark;
 }
 function paintLook(look){
   const root = document.documentElement;
-  const dark = darkHex(look.paper);
+  const paper = hexOk(look.paper, "#12110f");
+  const card = hexOk(look.card, "#2c2622");
+  const dark = darkHex(paper);
+  const ink = readable(hexOk(look.ink, dark ? "#fff8ef" : "#1c1916"), [paper, card], 4.5);
+  const mutedRaw = hexOk(look.muted, ink);
+  const muted = readable(contrast(mutedRaw, paper) >= 4.5 && contrast(mutedRaw, card) >= 4.5 ? mutedRaw : ink, [paper, card], 4.5);
+  const accent = apart(hexOk(look.accent, dark ? "#7ee8d8" : "#0e6b62"), paper, "#d7fff6", "#0c5c55");
+  const on = readable(darkHex(accent) ? "#f7fffc" : "#10211e", [accent], 4.5);
+  const mark = contrast(accent, paper) >= 4.5 ? accent : ink;
+  const line = apart(hexOk(look.line, dark ? "#a89886" : "#7d6f62"), paper, "#c4b8a8", "#5c5348");
+  const rose = dark ? "#ffb4a8" : "#8e2f2f";
+  const onRose = readable(darkHex(rose) ? "#fff8f6" : "#3b1210", [rose], 4.5);
+  let soft = dark ? "#1a3330" : "#e5f3f1";
+  if (contrast(ink, soft) < 4.5) soft = card;
   root.dataset.theme = dark ? "night" : "paper";
   root.dataset.font = look.font;
   root.dataset.border = look.border;
@@ -899,9 +1126,10 @@ function paintLook(look){
   root.dataset.motion = look.motion;
   root.dataset.scale = String(look.scale);
   root.style.colorScheme = dark ? "dark" : "light";
-  const pairs = {paper:look.paper, ink:look.ink, card:look.card, line:look.line, muted:look.muted, teal:look.accent, on: darkHex(look.accent) ? "#f7fffc" : "#10211e"};
+  const pairs = {paper, ink, card, line, muted, teal:accent, mark, on, soft, rose, "on-rose":onRose};
   Object.keys(pairs).forEach(key => root.style.setProperty("--" + key, pairs[key]));
-  root.style.setProperty("--rose", dark ? "#ffb4a8" : "#8e2f2f");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", paper);
 }
 let lookEditing = false;
 let lookDraft = null;
@@ -971,7 +1199,9 @@ function render(){
   if (home) home.style.display = tab === "menu" ? "none" : "";
   const dock = document.querySelector("footer .dock");
   if (dock) dock.style.display = tab === "board" && state.settings.showDock !== false ? "" : "none";
-  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "help" ? "Help" : tab === "look" ? "Look" : tab === "more" ? "Voices and look" : "Say a phrase";
+  $("#title").textContent = tab === "menu" ? "Home" : tab === "call" ? "On a call" : tab === "say" ? "Type" : tab === "notes" ? "Notepad" : tab === "about" ? "About me" : tab === "help" ? "Help" : tab === "look" ? "Look" : tab === "people" ? "Who I'm with" : tab === "more" ? "Voices and look" : (channelName() === "text" ? "Text a phrase" : "Say a phrase");
+  const again = $("#again");
+  if (again) again.textContent = channelName() === "text" ? "Text last again" : "Say last again";
   const slot = noteNow();
   const lines = scriptLines(slot.body);
   const at = Math.min(slot.place || 0, lines.length);
@@ -980,7 +1210,7 @@ function render(){
   const doseBar = due ? `<div class="card"><b>Time for ${esc(due.dose.name)}</b><p>${esc([due.dose.amount, due.time].filter(Boolean).join(" · "))}</p><button class="wide ink" id="took-dose" type="button">I took it</button><button class="wide ghost" id="stop-dose" type="button">Stop alarm</button></div>` : "";
   const banner = doseBar + waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close Speak Well.</p>` : "");
   const steps = [
-    "Tap a phrase. Speak Well says it out loud.",
+    "Tap Speak or Text, then tap a phrase. Speak says it. Text opens the phone's Messages app with the words filled in.",
     "Speaker is for people in the room. Phone call is for someone on the phone. Then tap Speaker on the phone's call screen.",
     "If the words are not on a button, type them, then tap Say it.",
     "About me stores her address, people, hobbies, and medicines. Typing my address offers the real words.",
@@ -993,6 +1223,7 @@ function render(){
   else if (tab === "say") view.innerHTML = banner + typer() + guide;
   else if (tab === "notes") view.innerHTML = banner + notepad() + guide;
   else if (tab === "about") view.innerHTML = banner + about() + guide;
+  else if (tab === "people") view.innerHTML = banner + peoplePage() + guide;
   else if (tab === "help") view.innerHTML = banner + helpPage() + guide;
   else if (tab === "look") view.innerHTML = banner + lookPage() + guide;
   else if (tab === "call") view.innerHTML = banner + call() + guide;
@@ -1056,10 +1287,11 @@ function menu(){
     + `<button class="wide ghost" data-go="emergency" type="button" style="display:block;width:100%;text-align:left;margin-top:1rem"><b>Emergency</b><br><span class="muted">Only if she needs help right now.</span></button>`;
 }
 function shown(){
-  const hidden = new Set(state.hidden || []);
-  const list = phrases().filter(p => !hidden.has(p.id) && p.id !== "emergency" && p.id !== "911" && (group === "All" || p.group === group) && (!query || (p.label+" "+p.speak).toLowerCase().includes(query.toLowerCase())));
-  const uses = state.uses || {};
-  const order = state.order || [];
+  const aud = currentAudience();
+  const hidden = new Set(aud.hidden || []);
+  const list = phrases().filter(p => !hidden.has(p.id) && p.id !== "emergency" && p.id !== "911" && (group === "All" || p.group === group) && (!query || (p.label+" "+p.speak+" "+emojiFor(p)).toLowerCase().includes(query.toLowerCase())));
+  const uses = ensureFreq()[channelName()].phrases;
+  const order = aud.order || [];
   const rank = new Map(order.map((id, i) => [id, i]));
   const mode = state.settings.sort || "used";
   return list.sort((a, b) => {
@@ -1075,11 +1307,12 @@ function move(id, dir){
   const j = i + dir;
   if (i < 0 || j < 0 || j >= list.length) return;
   const hold = list[i]; list[i] = list[j]; list[j] = hold;
-  const full = (state.order || []).concat(phrases().map(p => p.id));
+  const aud = currentAudience();
+  const full = (aud.order || []).concat(phrases().map(p => p.id));
   const seen = new Set();
   const base = full.filter(x => seen.has(x) ? false : (seen.add(x), true));
   let cursor = 0;
-  state.order = base.map(item => list.includes(item) ? list[cursor++] : item);
+  aud.order = base.map(item => list.includes(item) ? list[cursor++] : item);
   state.settings.sort = "manual";
   save();
   render();
@@ -1088,28 +1321,57 @@ function board(){
   const groups = ["All","Urgent","Needs","Feelings","Talk","People","Care"];
   const list = shown();
   const sorts = [["used","Most used"],["az","A–Z"],["group","Group"],["manual","My order"]];
-  const tools = arranging ? `<div class="card"><p>Arrange is on. These buttons will not speak.</p>
+  const tools = arranging ? `<div class="card"><p>Arrange is on. These buttons will not speak or text.</p>
     <button class="wide teal" id="done" type="button">Done</button>
     <div class="tools">${sorts.map(([id,label]) => `<button class="chip${state.settings.sort===id?" on":""}" data-sort="${id}" type="button">${label}</button>`).join("")}</div>
     <div class="tools">
-      <button class="chip" id="theme" type="button">${state.settings.theme==="night"?"Dark on":"Dark off"}</button>
+      <button class="chip" id="theme" type="button">${darkHex(looksNow().paper)?"Dark on":"Dark off"}</button>
       <button class="chip" id="cols" type="button">${state.settings.columns||2} columns</button>
       <button class="chip" id="chips" type="button">${state.settings.showChips===false?"Groups off":"Groups on"}</button>
       <button class="chip" id="dock" type="button">${state.settings.showDock===false?"Yes/No bar off":"Yes/No bar on"}</button>
-    </div></div>` : `<p class="muted">Tap a button. The phone says the full sentence.</p>`;
+    </div></div>` : `<p class="muted">${channelName()==="text" ? "Tap a button. Messages opens with that sentence. She taps Send." : "Tap a button. The phone says the full sentence."}</p>`;
   const chips = state.settings.showChips === false ? "" : `<div class="chips">${groups.map(g => `<button class="chip${g===group?" on":""}" data-group="${g}" type="button">${g}</button>`).join("")}</div>`;
-  const cols = state.settings.columns === 1 ? "1fr" : state.settings.columns === 3 ? "1fr 1fr 1fr" : "1fr 1fr";
+  const cols = state.settings.columns === 1 ? "minmax(0,1fr)" : state.settings.columns === 3 ? "repeat(3,minmax(0,1fr))" : "repeat(2,minmax(0,1fr))";
   const cards = list.map((p, index) => arranging
     ? `<div class="pad ${p.tone}"><b>${esc(p.label)}</b><div class="tools"><button class="chip" data-move="${esc(p.id)}" data-dir="-1" type="button" ${index===0?"disabled":""}>Up</button><button class="chip" data-move="${esc(p.id)}" data-dir="1" type="button" ${index===list.length-1?"disabled":""}>Down</button><button class="chip" data-hide="${esc(p.id)}" type="button">Hide</button></div></div>`
-    : `<button class="pad ${p.tone}" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b><span>${esc(p.group)}</span></button>`).join("");
-  const hidden = (state.hidden||[]).map(id => phrases().find(p => p.id === id)).filter(Boolean);
+    : `<button class="pad ${p.tone}" data-id="${esc(p.id)}" data-speak="${esc(p.speak)}" type="button" aria-label="${esc(emojiFor(p) + " " + p.label + ". " + p.speak)}">${padFace(p)}</button>`).join("");
+  const audHidden = new Set((currentAudience().hidden) || []);
+  const hidden = phrases().filter(p => audHidden.has(p.id));
   const back = arranging && hidden.length ? `<p class="kicker">Hidden</p>` + hidden.map(p => `<button class="wide ghost" data-show="${esc(p.id)}" type="button">Put back: ${esc(p.label)}</button>`).join("") : "";
   const note = !arranging && state.settings.comedyId ? `<button class="wide" id="reset-voice" type="button" style="margin-bottom:.5rem">Playing ${esc((COMEDY.find(item => item.id === state.settings.comedyId)||{}).name || "a play voice")}. Tap for her normal voice.</button>` : "";
   const boardOpts = arranging ? "" : fold("board", "Board options", `<p class="muted">To move, hide, or restyle buttons, open More and then Arrange.</p>`);
-  const tucked = phrases().filter(p => (p.id === "emergency" || p.id === "911") && !(state.hidden||[]).includes(p.id));
-  const emergency = tucked.length ? fold("emergency", "Emergency", `<p class="muted">Tucked here so a tap on the board cannot start them.</p><div class="grid" style="margin-top:.4rem">${tucked.map(p => `<button class="pad urgent" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>`) : "";
+  const tucked = phrases().filter(p => (p.id === "emergency" || p.id === "911") && !audHidden.has(p.id));
+  const emergency = tucked.length ? fold("emergency", "Emergency", `<p class="muted">Tucked here so a tap on the board cannot start them.</p><div class="grid" style="margin-top:.4rem">${tucked.map(p => `<button class="pad urgent" data-id="${esc(p.id)}" data-speak="${esc(p.speak)}" type="button">${padFace(p)}</button>`).join("")}</div>`) : "";
   const langNote = (state.settings.outputLang && state.settings.outputLang !== "en") ? `<p class="note">Buttons are spoken in ${esc((LANGS.find(item => item[0] === state.settings.outputLang) || ["","English"])[1])}. Change it under Type a sentence.</p>` : "";
-  return `${langNote}${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${emergency}${boardOpts}`;
+  return `${channelBar()}${audienceBar()}${freqBlock(channelName())}${langNote}${note}${tools}<input id="q" placeholder="Search" value="${esc(query)}" aria-label="Search">${chips}<div class="grid" style="grid-template-columns:${cols}">${cards}</div>${back}${emergency}${boardOpts}`;
+}
+function peoplePage(){
+  const aud = currentAudience();
+  const starters = PHRASES.filter(item => item.id !== "emergency" && item.id !== "911");
+  const toggles = starters.map(item => `<button class="chip${aud.pins.includes(item.id) ? " on" : ""}" data-pin="${esc(item.id)}" type="button" aria-pressed="${aud.pins.includes(item.id)}">${esc(emojiFor(item))} ${esc(item.label)}</button>`).join("");
+  const customs = (aud.custom || []).map(item => `<div class="row"><button class="wide ghost" data-force-speak="${esc(item.speak)}" type="button">${esc(emojiFor(item))} ${esc(item.label)}</button><button class="ghost" data-drop-phrase="${esc(item.id)}" type="button">Remove</button></div>`).join("");
+  const picks = EMOJI_BAR.map(item => `<button class="chip emo-btn" data-emoji-pick="${item}" type="button" aria-label="${item}">${item}</button>`).join("");
+  const remove = aud.kind === "custom" ? `<button class="wide rose" id="delete-aud" type="button">Delete this list</button>` : "";
+  return `<p class="muted">Pick who she is talking to. Each list keeps its own phrases on this phone. Family starts with the full board. Friends and coworkers start shorter.</p>
+    ${audienceBar()}
+    <label for="aud-rename">List name</label>
+    <div class="row"><input id="aud-rename" value="${esc(aud.name)}" maxlength="24"><button class="ink" id="rename-aud" type="button">Rename</button></div>
+    <p class="kicker">Phrases on ${esc(aud.name)}</p>
+    <div class="chips" style="flex-wrap:wrap">${toggles}</div>
+    <p class="kicker">Extra phrases</p>
+    ${customs || `<p class="muted">None yet. Add one below. It stays on this list only.</p>`}
+    <p class="kicker">Add a phrase</p>
+    <div class="chips" style="flex-wrap:wrap">${picks}</div>
+    <label for="new-emoji">Emoji</label>
+    <input id="new-emoji" maxlength="8" placeholder="❤️" autocomplete="off">
+    <label for="new-label">Button words</label>
+    <input id="new-label" maxlength="32" placeholder="Good night" autocomplete="off">
+    <label for="new-speak">Full sentence</label>
+    <textarea id="new-speak" rows="3" placeholder="Good night. I love you."></textarea>
+    <button class="wide teal" id="add-phrase" type="button">Save phrase to this list</button>
+    <p class="kicker">Another list</p>
+    <div class="row"><input id="new-aud" maxlength="24" placeholder="Church, neighbors" autocomplete="off"><button class="ink" id="add-aud" type="button">Add list</button></div>
+    ${remove}`;
 }
 function typer(){
   const mood = Number(state.settings.mood);
@@ -1122,18 +1384,20 @@ function typer(){
   const pinOn = state.settings.pinBox !== false;
   const from = state.settings.hintFrom || "both";
   const pack = typingPack();
-  const options = fold("speak", "Typing and extras", `<button class="wide ghost" id="word-line" type="button">${wordOn ? "Word line is on" : "Word line is off"}</button><button class="wide ghost" id="phrase-toggle" type="button">${phraseOn ? "Phrase line is on" : "Phrase line is off"}</button><button class="wide ghost" id="pin-box" type="button">${pinOn ? "Box stays above the keyboard" : "Box stays in place"}</button><button class="wide ${from==="both"?"ink":"ghost"}" data-from="both" type="button">Board and her words</button><button class="wide ${from==="said"?"ink":"ghost"}" data-from="said" type="button">Only words she has said</button><button class="wide ${from==="board"?"ink":"ghost"}" data-from="board" type="button">Only board phrases</button><button class="wide ink" id="do-text" type="button">Text it</button><button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button>`);
-  return `<button class="wide" data-go="notes" type="button" style="text-align:left;margin-bottom:.6rem"><b>Notepad</b><br><span class="muted">Write a long script. Pause it, then start again on the same line.</span></button>
-    <label for="box">What should the phone say?</label>
+  const options = fold("speak", "Typing and extras", `<button class="wide ghost" id="word-line" type="button">${wordOn ? "Word line is on" : "Word line is off"}</button><button class="wide ghost" id="phrase-toggle" type="button">${phraseOn ? "Phrase line is on" : "Phrase line is off"}</button><button class="wide ghost" id="pin-box" type="button">${pinOn ? "Box stays above the keyboard" : "Box stays in place"}</button><button class="wide ${from==="both"?"ink":"ghost"}" data-from="both" type="button">Board and words from this channel</button><button class="wide ${from==="said"?"ink":"ghost"}" data-from="said" type="button">Only words from this channel</button><button class="wide ${from==="board"?"ink":"ghost"}" data-from="board" type="button">Only board phrases</button><button class="wide ghost" id="do-wa" type="button">Send in WhatsApp</button>`);
+  return `${channelBar()}${freqBlock("speak")}${freqBlock("text")}<button class="wide" data-go="notes" type="button" style="text-align:left;margin-bottom:.6rem"><b>Notepad</b><br><span class="muted">Write a long script. Pause it, then start again on the same line.</span></button>
+    <label for="box">Words to say or text</label>
     <div class="chips" style="flex-wrap:nowrap;overflow-x:auto">${LANGS.map(([id,label]) => `<button class="chip${(state.settings.outputLang||"en")===id?" on":""}" data-lang="${id}" type="button">${label}</button>`).join("")}</div>
     <p class="note">Translation sends the phrase to MyMemory (an online service).</p>
     <p class="muted" id="gloss"></p>
     <div id="composer">
       ${phraseOn ? hintRow(pack.phrases, "phrase") : `<div id="phrase-line"></div>`}
       ${wordOn ? hintRow(pack.words, "word") : `<div id="word-line"></div>`}
-      <div class="row" style="align-items:stretch">
-        <textarea id="box" rows="2" style="min-height:4.2rem;margin:0;flex:1">${esc(draft)}</textarea>
-        <button class="teal" id="do-say" type="button" style="width:6rem">Say it</button>
+      ${emojiBar()}
+      <textarea id="box" rows="3" style="min-height:5.5rem;margin:0" placeholder="Type a sentence">${esc(draft)}</textarea>
+      <div class="actions">
+        <button class="teal" id="do-say" type="button">🔊 Say it</button>
+        <button class="ink" id="do-text" type="button">💬 Text it</button>
       </div>
     </div>
     <div class="row" style="align-items:center;gap:.4rem"><span class="muted">Soft</span><input id="mood" type="range" min="0" max="100" value="${moodSafe}" aria-label="Mood, from soft to harsh" style="flex:1;accent-color:#0e6b62"><span class="muted">Harsh</span></div>
@@ -1153,8 +1417,8 @@ function typer(){
 function call(){
   return `<div class="card"><h2 style="margin:.1rem 0 .4rem">So the other person can hear her</h2>
     <p>Tap Phone call at the top. On the call screen, tap Speaker, turn the volume up, and hold the phone a little away. She is heard through the microphone.</p></div>
-    <button class="wide teal" data-speak="Can you hear me? I am using Speak Well because I cannot speak." type="button">Test: Can you hear me?</button>
-    <div class="grid" style="margin-top:.7rem">${phrases().filter(p => p.id !== "emergency" && p.id !== "911").slice(0,8).map(p => `<button class="pad" data-speak="${esc(p.speak)}" type="button"><b>${esc(p.label)}</b></button>`).join("")}</div>
+    <button class="wide teal" data-force-speak="Can you hear me? I am using Speak Well because I cannot speak." type="button">Test: Can you hear me?</button>
+    <div class="grid" style="margin-top:.7rem">${phrases().filter(p => p.id !== "emergency" && p.id !== "911").slice(0,8).map(p => `<button class="pad" data-force-speak="${esc(p.speak)}" type="button">${padFace(p)}</button>`).join("")}</div>
     ${fold("call", "Call options", `<button class="wide ghost" id="lead" type="button">${state.settings.leadIn ? "Starts with Please listen" : "Phrase only"}</button><div class="voices" style="margin-top:.5rem">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b></button>`).join("")}</div>`)}`;
 }
 let openTalk = "";
@@ -1166,7 +1430,7 @@ function more(){
     if (talk) return `<button class="wide ghost" id="close-talk" type="button">Back</button>
       <h2 style="margin:.6rem 0 .3rem">${esc(talk.title)}</h2>
       <button class="wide teal" id="replay-open" type="button">Say this talk again</button>
-      ${talk.lines.map(line => `<button class="wide ghost" data-speak="${esc(line)}" type="button" style="margin-top:.4rem">${esc(line)}</button>`).join("")}
+      ${talk.lines.map(line => `<button class="wide ghost" data-force-speak="${esc(line)}" type="button" style="margin-top:.4rem">${esc(line)}</button>`).join("")}
       <button class="wide" id="delete-talk" type="button" style="margin-top:.7rem">Delete this talk</button>`;
     openTalk = "";
   }
@@ -1184,15 +1448,15 @@ function more(){
   </div>
     <div class="card"><b>Voices</b><p>Clara, Helen, June, Mae, and Nora are women. Owen, Caleb, Miles, and Arthur are men. Speed and pitch are on Type a sentence. They use a free voice already on this phone. ${women.length ? "Found: " + esc(women.map(v=>v.name).slice(0,4).join(", ")) : "No named voice yet."} The best free packs come from the phone itself. On Android, search Settings for Text-to-speech, open Google Text-to-speech, and install voice data for her language, male and female if both are listed. On iPhone: Settings, Accessibility, Spoken Content, Voices.</p>
     <div class="voices">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" data-preview="1" type="button">${p.name}</button>`).join("")}</div></div>
-    <div class="card"><b>Text a phrase</b><p>Text opens the phone's own Messages app with the words filled in. She taps Send. WhatsApp does the same if it is installed. A new messaging app is not required.</p>
-    <button class="wide ink" data-speak="" data-text="I had a stroke. I can hear you. I cannot speak. Please read this text." type="button">Text: I cannot speak</button></div>
+    <div class="card"><b>Text a phrase</b><p>Text opens the phone's own Messages app with the words filled in. She taps Send there. Speak Well does not send the message itself.</p>
+    <button class="wide ink" data-text="I had a stroke. I can hear you. I cannot speak. Please read this text." type="button">💬 Text: I cannot speak</button></div>
     <div class="card"><b>Put it on the phone</b><p>An iPhone cannot install a random downloaded app. The simple way is Add to Home Screen from Chrome or Safari. Or send this one file, save it in Downloads, and open it with Chrome. Do not open it from inside a zip.</p></div>
     <button class="wide ink" id="unlock" type="button">Arrange the board</button>
     <p class="muted">Arrange is locked until you tap that. Done locks it again. Nothing is uploaded.</p>
     ${fold("more", "More options", `<label>Her name<input id="name" value="${esc(state.settings.name||"")}" placeholder="First name"></label>`)}`;
 }
 view.addEventListener("pointerdown", (event) => {
-  const hint = event.target.closest("[data-suggest], #do-say");
+  const hint = event.target.closest("[data-suggest], #do-say, #do-text, [data-emoji]");
   if (hint && document.activeElement && document.activeElement.id === "box") event.preventDefault();
 });
 view.addEventListener("click", (event) => {
@@ -1323,17 +1587,65 @@ view.addEventListener("click", (event) => {
   if (t.id === "reset-voice"){ state.settings.comedyId = ""; state.settings.mood = 50; save(); render(); return; }
   if (t.id === "unlock"){ arranging = true; tab = "board"; render(); return; }
   if (t.id === "done"){ arranging = false; render(); return; }
-  if (t.id === "theme"){ state.settings.theme = state.settings.theme === "night" ? "paper" : "night"; save(); render(); return; }
+  if (t.id === "theme"){
+    const dark = darkHex(looksNow().paper);
+    state.lookOn = dark ? 1 : 0;
+    state.settings.theme = dark ? "paper" : "night";
+    save(); render(); return;
+  }
   if (t.id === "cols"){ state.settings.columns = state.settings.columns === 1 ? 2 : state.settings.columns === 2 ? 3 : 1; save(); render(); return; }
   if (t.id === "chips"){ state.settings.showChips = state.settings.showChips === false; save(); render(); return; }
   if (t.id === "dock"){ state.settings.showDock = state.settings.showDock === false; save(); render(); return; }
   if (t.dataset.sort){ state.settings.sort = t.dataset.sort; save(); render(); return; }
   if (t.dataset.move){ move(t.dataset.move, Number(t.dataset.dir)); return; }
-  if (t.dataset.hide){ state.hidden = (state.hidden||[]).concat(t.dataset.hide); save(); render(); return; }
-  if (t.dataset.show){ state.hidden = (state.hidden||[]).filter(id => id !== t.dataset.show); save(); render(); return; }
+  if (t.dataset.hide){ const aud = currentAudience(); aud.hidden = (aud.hidden||[]).concat(t.dataset.hide); save(); render(); return; }
+  if (t.dataset.show){ const aud = currentAudience(); aud.hidden = (aud.hidden||[]).filter(id => id !== t.dataset.show); save(); render(); return; }
   if (t.dataset.group){ group = t.dataset.group; render(); return; }
-  if (t.dataset.speak !== undefined && t.dataset.speak){ say(t.dataset.speak); return; }
-  if (t.dataset.text){ textIt(t.dataset.text); return; }
+  if (t.dataset.channel){ state.channel = t.dataset.channel === "text" ? "text" : "speak"; save(); render(); return; }
+  if (t.dataset.aud){ state.audienceId = t.dataset.aud; group = "All"; save(); render(); return; }
+  if (t.dataset.pin){
+    const aud = currentAudience();
+    aud.pins = aud.pins.includes(t.dataset.pin) ? aud.pins.filter(id => id !== t.dataset.pin) : aud.pins.concat(t.dataset.pin);
+    save(); render(); return;
+  }
+  if (t.dataset.emojiPick){ const input = document.getElementById("new-emoji"); if (input) input.value = t.dataset.emojiPick; return; }
+  if (t.dataset.emoji){ draft = (draft ? draft.replace(/\s+$/, "") + " " : "") + t.dataset.emoji + " "; render(); const box = $("#box"); if (box){ box.focus(); box.scrollTop = box.scrollHeight; } return; }
+  if (t.id === "rename-aud"){ const input = document.getElementById("aud-rename"); const name = input ? input.value.trim() : ""; if (name) currentAudience().name = name.slice(0, 24); save(); render(); return; }
+  if (t.id === "add-aud"){
+    const input = document.getElementById("new-aud");
+    const name = input && input.value.trim() ? input.value.trim().slice(0, 24) : "Custom";
+    const id = "aud-" + Date.now();
+    state.audiences.push({ id:id, name:name, kind:"custom", pins:["yes","no","wait","help","thanks","hear"], custom:[], hidden:[], order:[] });
+    state.audienceId = id;
+    save(); render(); return;
+  }
+  if (t.id === "delete-aud"){
+    const aud = currentAudience();
+    if (aud.kind !== "custom") return;
+    state.audiences = state.audiences.filter(item => item.id !== aud.id);
+    state.audienceId = state.audiences[0] ? state.audiences[0].id : "family";
+    ensureAudiences();
+    save(); render(); return;
+  }
+  if (t.id === "add-phrase"){
+    const label = (document.getElementById("new-label") || {}).value || "";
+    const speak = (document.getElementById("new-speak") || {}).value || "";
+    const emoji = (document.getElementById("new-emoji") || {}).value || "";
+    const line = String(speak || label).trim();
+    if (!line){ notice = "Write the sentence first."; render(); return; }
+    const aud = currentAudience();
+    aud.custom = aud.custom || [];
+    aud.custom.push({ id:"c-" + Date.now(), label:String(label || line).trim().slice(0, 32), speak:line.slice(0, 240), emoji:String(emoji || "").trim().slice(0, 8), group:"Talk", tone:"talk" });
+    save(); notice = "Saved on " + aud.name + "."; render(); return;
+  }
+  if (t.dataset.dropPhrase){ const aud = currentAudience(); aud.custom = (aud.custom || []).filter(item => item.id !== t.dataset.dropPhrase); save(); render(); return; }
+  if (t.dataset.forceSpeak){ say(t.dataset.forceSpeak); return; }
+  if (t.dataset.speak !== undefined && t.dataset.speak){
+    if (channelName() === "text") textIt(t.dataset.speak, t.dataset.id);
+    else say(t.dataset.speak);
+    return;
+  }
+  if (t.dataset.text){ textIt(t.dataset.text, t.dataset.id); return; }
   if (t.dataset.preset){
     state.settings.presetId = t.dataset.preset;
     state.settings.voiceURI = "";
@@ -1348,7 +1660,7 @@ view.addEventListener("click", (event) => {
   if (t.id === "pin-box"){ state.settings.pinBox = state.settings.pinBox === false; save(); render(); return; }
   if (t.dataset.from){ state.settings.hintFrom = t.dataset.from; save(); render(); return; }
   if (t.id === "hear-voice"){ say("Hello. This is how I sound. You can make me lower, higher, slower, or faster."); return; }
-  if (t.id === "do-say") say(draft);
+  if (t.id === "do-say"){ if (draft.trim()) say(draft); return; }
   if (t.dataset.lang){ state.settings.outputLang = t.dataset.lang; save(); render(); queueGloss(); return; }
   if (t.id === "do-text" && draft.trim()){ translateLine(draft.trim(), state.settings.outputLang || "en").then(result => textIt(result.text)); return; }
   if (t.id === "do-wa" && draft.trim()){ translateLine(draft.trim(), state.settings.outputLang || "en").then(result => wa(result.text)); return; }
@@ -1423,7 +1735,7 @@ view.addEventListener("change", (event) => {
       const next = JSON.parse(text);
       if (!next || typeof next !== "object") throw new Error("bad");
       if (next.profile && !next.settings){ state.profile = next.profile; mine(); }
-      else if (next.settings){ Object.assign(state, next); state.settings = Object.assign({presetId:"nora"}, next.settings); mine(); book(); looksNow(); }
+      else if (next.settings){ Object.assign(state, next); state.settings = Object.assign({presetId:"nora"}, next.settings); mine(); book(); looksNow(); ensureAudiences(); ensureFreq(); }
       else throw new Error("bad");
       save();
       notice = "Her information is back on this phone.";
@@ -1450,10 +1762,19 @@ $("#sound").addEventListener("click", (event) => {
 });
 $("#stop").onclick = () => { pauseNote(); speaking = ""; render(); };
 $("#home").onclick = () => { tab = "menu"; arranging = false; openTalk = ""; notice = ""; render(); };
-$("#again").onclick = () => { if (state.history[0]) say(state.history[0]); };
+$("#again").onclick = () => {
+  if (channelName() === "text"){
+    const last = (state.historyText || [])[0] || "";
+    if (last) textIt(last);
+    return;
+  }
+  if (state.history[0]) say(state.history[0]);
+};
 document.body.addEventListener("click", (event) => {
   const t = event.target.closest("[data-say]");
-  if (t && t.closest("footer")) say(t.dataset.say);
+  if (!t || !t.closest("footer")) return;
+  if (channelName() === "text") textIt(t.dataset.say);
+  else say(t.dataset.say);
 });
 if (window.speechSynthesis){ speechSynthesis.onvoiceschanged = () => { allVoices(); if (tab === "more" || tab === "call") render(); }; warmVoices(); }
 setInterval(checkDose, 15000);
@@ -1484,6 +1805,9 @@ document.addEventListener("visibilitychange", () => {
   applyRoute();
 });
 window.addEventListener("pageshow", () => { resumeVoice(); applyRoute(); });
+ensureAudiences();
+ensureFreq();
+save();
 applyRoute();
 render();
 </script>
