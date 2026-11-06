@@ -463,12 +463,12 @@ function renderSound(){
       <button class="wide ${output==="auto"?"ink":"ghost"}" data-out="auto" type="button">${output==="auto"?"Auto is on":"Auto is off"} — follow a phone call</button>
       <button class="wide ghost" id="sound-lead" type="button" style="margin-top:.4rem">${state.settings.leadIn ? "On a call, starts with Please listen" : "On a call, phrase only"}</button>
       <button class="wide teal" id="sound-test" type="button" style="margin-top:.4rem">Test this sound</button>
-      <p class="muted">On the phone’s call screen, tap Speaker and turn the volume up. A computer uses its current speaker.</p>
+      <p class="muted">On the phone’s call screen, tap Speaker and turn the volume up. Speak Well cannot put sound into the Phone uplink; Speaker on the call screen is how they hear her. A computer uses its current speaker.</p>
     </div>` : "";
   const hint = output === "auto" && detectedCall ? `<p class="muted">A call took the sound. Tap Speaker to override.</p>` : "";
   box.innerHTML = `<div class="grid">
       <button class="pick ${onCall ? "" : "on-speaker"}" data-out="speaker" type="button">Speaker<span class="sub">${output==="auto" && !onCall ? "Auto · out loud" : "Out loud"}</span></button>
-      <button class="pick ${onCall ? "on-call" : ""}" data-out="call" type="button">Phone call<span class="sub">${output==="auto" && onCall ? "Auto · on the line" : "On the line"}</span></button>
+      <button class="pick ${onCall ? "on-call" : ""}" data-out="call" type="button">Phone call<span class="sub">${output==="auto" && onCall ? "Auto · for a Phone call" : "For a Phone call"}</span></button>
     </div>${hint}
     <button class="wide ghost" id="sound-more" type="button" style="margin-top:.35rem">${soundOpen ? "Hide sound options" : "Sound options"}</button>${extra}`;
 }
@@ -1040,7 +1040,7 @@ function helpPage(){
   return `<p>Speak Well talks when she taps a button. Nothing she types is uploaded.</p>
     <div class="card"><b>Put it on the phone</b><p>Open the link in Chrome. Tap the three dots. Tap Install app, or Add to Home screen. Next time, tap the Speak Well icon.</p></div>
     <div class="card"><b>Medicine alarm</b><p>About me, then Health. Add the name, the amount, and the time. Tap Allow phone alerts. Install the app. The phone can ring, vibrate, and show the alert after Speak Well is closed. Tap the alert and it says the medicine out loud, twice. I took it stops it for that time today.</p></div>
-    <div class="card"><b>On a call</b><p>Tap Phone call at the top. On the phone's call screen, tap Speaker. Hold the phone a little away. The other person hears her through the microphone.</p></div>
+    <div class="card"><b>On a call</b><p>The call stays in the Phone app. Speak Well cannot join that call’s microphone line. Tap Phone call here so Speak Well is ready, then on the Phone call screen tap Speaker and turn the volume up. Hold the phone a little away. The other person hears Speak Well through the Phone mic. Mute and Speaker on the call screen are Phone controls. Speak Well’s Stop only quiets Speak Well.</p></div>
     <div class="card"><b>Text</b><p>On the board, tap Text, then a phrase. The phone opens Messages with that sentence. She taps Send. Spoken phrases and texted phrases are counted apart.</p></div>
     <div class="card"><b>Who she is with</b><p>Home, then Who I'm with. Family, friends, and coworkers each keep their own phrases. Add a list for anyone else. It stays on this phone.</p></div>
     <div class="card"><b>If the app is reinstalled</b><p>About me, Save a copy of my information. Later, Put my information back and choose that file.</p></div>
@@ -1053,7 +1053,7 @@ const HOME_SECTIONS = [
   ["people","Who I'm with","Family, friends, coworkers, or a list you name."],
   ["notes","Notepad","Write it ahead. Pause, then pick up the same line."],
   ["about","About me","Address, license, people, and things to remember."],
-  ["call","Phone call","So the person on the line can hear her."],
+  ["call","Phone call","Ready Speak Well for a Phone-app call (Speaker needed)."],
   ["talks","Conversations","Open an earlier talk and say it again."],
   ["more","Voices and look","Voice, colors, size, and layout."],
   ["help","Help","Setup, medicine alarms, and how to put it on the phone."],
@@ -1232,10 +1232,10 @@ function render(){
   const waiting = tab !== "notes" && lines.length && (noteReading || (at > 0 && at < lines.length));
   const waitBar = waiting ? `<div class="card" style="display:flex;gap:.4rem;align-items:center"><button class="wide ghost" data-go="notes" type="button" style="flex:1;text-align:left"><b>${esc(slot.title)}</b><br><span class="muted">${noteReading ? "Speaking line " + (at + 1) + " of " + lines.length : "Paused at line " + (at + 1) + " of " + lines.length}</span></button><button class="teal" id="note-bar" type="button">${noteReading ? "Pause" : "Continue"}</button></div>` : "";
   const doseBar = due ? `<div class="card"><b>Time for ${esc(due.dose.name)}</b><p>${esc([due.dose.amount, due.time].filter(Boolean).join(" · "))}</p><button class="wide ink" id="took-dose" type="button">I took it</button><button class="wide ghost" id="stop-dose" type="button">Stop alarm</button></div>` : "";
-  const banner = doseBar + waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close Speak Well.</p>` : "");
+  const banner = doseBar + waitBar + (notice ? `<p class="note">${esc(notice)}</p>` : "") + (speaking ? `<p class="speak">Speaking: ${esc(speaking)}</p>` : "") + (liveCall() ? `<p class="note">A phone call is open in the Phone app. Speak Well is not on the Phone mic line. Stay on this screen to talk. If they cannot hear her, open the Phone app, tap Speaker, then come back. Do not close Speak Well.</p>` : "");
   const steps = [
     "Tap Speak or Text, then tap a phrase. Speak says it. Text opens the phone's Messages app with the words filled in.",
-    "Speaker is for people in the room. Phone call is for someone on the phone. Then tap Speaker on the phone's call screen.",
+    "Speaker is for people in the room. Phone call gets Speak Well ready for a Phone-app call. Then tap Speaker on the phone’s call screen.",
     "If the words are not on a button, type them, then tap Say it.",
     "About me stores her address, people, hobbies, and medicines. Typing my address offers the real words.",
     "Add a medicine and a time. Tap Allow phone alerts. Install Speak Well so the alarm can ring after the app is closed. Tap the alert. Speak Well says the medicine twice.",
@@ -1445,7 +1445,7 @@ function typer(){
 }
 function call(){
   return `<div class="card"><h2 style="margin:.1rem 0 .4rem">So the other person can hear her</h2>
-    <p>Tap Phone call at the top. On the call screen, tap Speaker, turn the volume up, and hold the phone a little away. She is heard through the microphone.</p></div>
+    <p>The call stays in the Phone app. Speak Well cannot feed the Phone uplink or join that call’s microphone line. Tap Phone call here so Speak Well is ready, then on the Phone call screen tap Speaker and turn the volume up. Hold the phone a little away. The other person hears Speak Well through the Phone mic. Mute and Speaker on the call screen are Phone controls. Speak Well’s Stop only quiets Speak Well.</p></div>
     <button class="wide teal" data-force-speak="Can you hear me? I am using Speak Well because I cannot speak." type="button">Test: Can you hear me?</button>
     <div class="grid" style="margin-top:.7rem">${phrases().filter(p => p.id !== "emergency" && p.id !== "911").slice(0,8).map(p => `<button class="pad" data-force-speak="${esc(p.speak)}" type="button">${padFace(p)}</button>`).join("")}</div>
     ${fold("call", "Call options", `<button class="wide ghost" id="lead" type="button">${state.settings.leadIn ? "Starts with Please listen" : "Phrase only"}</button><div class="voices" style="margin-top:.5rem">${PRESETS.map(p => `<button class="voice${p.id===state.settings.presetId?" on":""}" data-preset="${p.id}" type="button"><b>${p.name}</b></button>`).join("")}</div>`)}`;

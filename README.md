@@ -30,7 +30,7 @@ Speak Well talks when she taps a button. No store, no account, nothing to pay.
 
 ## Phone calls
 
-Tap Phone call at the top. On the phone's call screen, tap Speaker and turn the volume up. The other person hears her through the microphone.
+The call stays in the Phone app. Speak Well does not dial, mute, or hang up that call. It plays words out loud with the phone's voices (Web Speech). The other person hears those words only when Speaker is on in the Phone app, so sound goes through the air into the Phone mic. Speak Well cannot put a microphone or its voice into the Phone uplink on an iPhone or Android home-screen web app. Mute and Speaker on the call screen are Phone controls. Speak Well's Stop only quiets Speak Well.
 
 ## Voices
 
